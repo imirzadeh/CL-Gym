@@ -60,6 +60,7 @@ if __name__ == "__main__":
     
         # algorithm
         'optimizer': 'SGD', #tune.choice(['SGD', 'Adam']),
+        'momentum': 0.8,
         'epochs_per_task': 900,
         'learning_rate': 0.0136,#tune.loguniform(0.001, 0.05),
         'learning_rate_decay': 0.94,#tune.uniform(0.7, 0.99),
