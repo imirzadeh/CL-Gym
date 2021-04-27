@@ -1,3 +1,4 @@
+accelerate==0.2.1
 aiohttp==3.7.4.post0
 aiohttp-cors==0.7.0
 aioredis==1.3.1
@@ -51,6 +52,7 @@ protobuf==3.15.8
 psutil==5.8.0
 py==1.10.0
 py-spy==0.3.5
+pyaml==20.4.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 Pygments==2.8.1
@@ -82,9 +84,9 @@ tabulate==0.8.9
 tensorboardX==2.2
 threadpoolctl==2.1.0
 toml==0.10.2
-torch==1.7.1
-torchaudio==0.7.2
-torchvision==0.8.2
+torch==1.8.1
+torchaudio==0.8.1
+torchvision==0.9.1
 tornado==6.1
 typing-extensions==3.7.4.3
 Unidecode==1.2.0
