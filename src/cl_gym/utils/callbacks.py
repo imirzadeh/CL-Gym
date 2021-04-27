@@ -166,9 +166,7 @@ class ModelCheckPoint(ContinualCallback):
         # get the model (backbone)
         model = trainer.algorithm.backbone
         model.eval()
-        # checkpoint
         file_path = self.__get_save_path(trainer)
-        # save
         torch.save(model.to('cpu').state_dict(), file_path)
     
     def on_before_fit(self, trainer):
