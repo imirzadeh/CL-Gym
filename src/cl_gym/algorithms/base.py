@@ -80,7 +80,7 @@ class ContinualAlgorithm:
         else:
             lr = self.params['learning_rate']
         if self.params['optimizer'].lower() == 'sgd':
-            return torch.optim.SGD(self.backbone.parameters(), lr=lr, momentum=0.8)
+            return torch.optim.SGD(self.backbone.parameters(), lr=lr, momentum=self.params['momentum'])
         elif self.params['optimizer'].lower() == 'adam':
             return torch.optim.Adam(self.backbone.parameters(), lr=lr)
         else:

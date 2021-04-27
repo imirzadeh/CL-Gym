@@ -22,8 +22,8 @@ class EWC(ContinualAlgorithm):
         train_loader, _ = self.benchmark.load(self.current_task, batch_size=32)
         for x, y, _ in train_loader:
             batch_size = len(y)
-            x = x.to(self.params.device)
-            y = y.to(self.params.device)
+            x = x.to(self.params['device'])
+            y = y.to(self.params['device'])
             log_out = F.log_softmax(self.backbone(x, self.current_task), dim=1)
             log_likelihoods.append(log_out[range(batch_size), y.data])
             samples_so_far += batch_size

@@ -6,10 +6,6 @@ from torch.nn import functional as F
 from cl_gym.algorithms import ContinualAlgorithm
 from cl_gym.algorithms.utils import flatten_grads, assign_grads
 from cl_gym.algorithms.utils import flatten_weights, assign_weights
-#
-# LR = 0.05
-# NUM_SAMPLES = 10
-# MC_INIT_POS = 0.12
 
 
 class MCSGD(ContinualAlgorithm):
@@ -17,13 +13,11 @@ class MCSGD(ContinualAlgorithm):
         super(MCSGD, self).__init__(backbone, benchmark, params, requires_memory=True)
         self.w_bar_prev = None
         self.w_hat_curr = None
+        self.num_samples_on_line = self.params.get('mcsgd_line_samples', 5)
+        self.alpha = self.params.get('mcsgd_alpha', 0.5)
     
-    def prepare_optimizer(self, task_id):
-        lr = max(self.params.learning_rate * (self.params.learning_rate_decay ** (task_id-1)), 0.001)
-        return torch.optim.SGD(self.backbone.parameters(), lr=lr, momentum=0.8)
-
     def calculate_line_loss(self, w_start, w_end, loader):
-        line_samples = np.arange(0.0, 1.01, 1.0 / float(self.params.mcsgd_line_samples))
+        line_samples = np.arange(0.0, 1.01, 1.0 / float(self.num_samples_on_line))
         accum_grad = None
         import time
         t_calc_point = 0
@@ -47,7 +41,7 @@ class MCSGD(ContinualAlgorithm):
                 accum_grad += grads
             t3 = time.time()
             t_calc_grads += (t3 - t2)
-        return accum_grad/self.params.mcsgd_line_samples
+        return accum_grad/self.num_samples_on_line
    
     def calculate_point_loss(self, net, loader):
         # criterion = nn.CrossEntropyLoss()
@@ -63,7 +57,7 @@ class MCSGD(ContinualAlgorithm):
     
     def find_connected_minima(self, task):
         # print(f"Debug >> w_bar_prev? {self.w_bar_prev is not None}, w_hat_curr? {self.w_hat_curr is not None}")
-        mc_model = assign_weights(self.backbone, self.w_bar_prev + (self.w_hat_curr - self.w_bar_prev) * self.params.mcsgd_init_pos)
+        mc_model = assign_weights(self.backbone, self.w_bar_prev + (self.w_hat_curr - self.w_bar_prev) * self.alpha)
         optimizer = self.prepare_optimizer(task)
         loader_prev, _ = self.benchmark.load_memory_joint(task-1, batch_size=32)
         loader_curr, _ = self.benchmark.load_subset(task, batch_size=32)

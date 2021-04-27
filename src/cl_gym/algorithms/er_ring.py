@@ -12,10 +12,6 @@ class ERRingBuffer(ContinualAlgorithm):
         self.episodic_memory_iter = None
         self.episodic_memory_loader = None
 
-    def prepare_optimizer(self, task_id):
-        lr = self.params.learning_rate*(self.params.learning_rate_decay**(task_id-1))
-        return torch.optim.SGD(self.backbone.parameters(), lr=lr, momentum=0.8)
-    
     def training_step(self, task_id, inp, targ, optimizer, criterion):
         optimizer.zero_grad()
         if task_id > 1:

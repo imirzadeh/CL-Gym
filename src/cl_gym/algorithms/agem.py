@@ -37,10 +37,6 @@ class AGEM(ContinualAlgorithm):
         """
         return grad_batch - (torch.dot(grad_batch, grad_ref) / torch.dot(grad_ref, grad_ref)) * grad_ref
     
-    def prepare_optimizer(self, task_id):
-        lr = self.params.learning_rate*(self.params.learning_rate_decay**(task_id-1))
-        return torch.optim.SGD(self.backbone.parameters(), lr=lr, momentum=0.8)
-
     def training_step(self, task_id, inp, targ, optimizer, criterion):
         optimizer.zero_grad()
         pred = self.backbone(inp, task_id)
