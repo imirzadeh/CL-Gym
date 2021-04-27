@@ -12,4 +12,4 @@ class Multitask(ContinualAlgorithm):
         super(Multitask, self).__init__(backbone, benchmark, params, requires_memory=True)
 
     def prepare_train_loader(self, task_id):
-        return self.benchmark.load_joint(task_id, self.params.batch_size_train, shuffle=True)[0]
+        return self.benchmark.load_joint(task_id, self.params.batch_size_train, shuffle=True, pin_memory=True)[0]

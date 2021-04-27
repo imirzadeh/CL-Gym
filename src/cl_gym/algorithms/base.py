@@ -68,10 +68,10 @@ class ContinualAlgorithm:
         pass
     
     def prepare_train_loader(self, task_id):
-        return self.benchmark.load(task_id, self.params['batch_size_train'])[0]
+        return self.benchmark.load(task_id, self.params['batch_size_train'], pin_memory=True)[0]
     
     def prepare_validation_loader(self, task_id):
-        return self.benchmark.load(task_id, self.params['batch_size_validation'])[1]
+        return self.benchmark.load(task_id, self.params['batch_size_validation'], pin_memory=True)[1]
     
     def prepare_optimizer(self, task_id):
         if self.params.get('learning_rate_decay'):

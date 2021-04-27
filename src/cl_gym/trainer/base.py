@@ -51,12 +51,13 @@ class ContinualTrainer:
         train_loader = self.algorithm.prepare_train_loader(task)
         optimizer = self.algorithm.prepare_optimizer(task)
         criterion = self.algorithm.prepare_criterion(task)
-        
+        device = self.params['device']
         for epoch in range(1, self.params['epochs_per_task']+1):
             self.on_before_training_epoch()
             self.algorithm.backbone.train()
+            self.algorithm.backbone = self.algorithm.backbone.to(device)
             for batch_idx, (inp, targ, task_id) in enumerate(train_loader):
-                self.algorithm.training_step(task, inp, targ, optimizer, criterion)
+                self.algorithm.training_step(task, inp.to(device), targ.to(device), optimizer, criterion)
                 self.algorithm.training_step_end()
                 self.on_after_training_step()
             self.algorithm.training_epoch_end()
@@ -65,6 +66,8 @@ class ContinualTrainer:
     
     def validate_algorithm_on_task(self, task, validate_on_train=False):
         self.algorithm.backbone.eval()
+        device = self.params['device']
+        self.algorithm.backbone = self.algorithm.backbone.to(device)
         test_loss = 0
         correct = 0
         total = 0
@@ -75,6 +78,7 @@ class ContinualTrainer:
         criterion = self.algorithm.prepare_criterion(task)
         with torch.no_grad():
             for (inp, targ, task_id) in eval_loader:
+                inp, targ, task_id = inp.to(device), targ.to(device), task_id.to(device)
                 pred = self.algorithm.backbone(inp, task)
                 total += len(targ)
                 test_loss += criterion(pred, targ).item()
