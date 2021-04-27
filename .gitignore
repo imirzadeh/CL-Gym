@@ -501,3 +501,13 @@ tags
 [._]*.un~
 
 # End of https://www.toptal.com/developers/gitignore/api/python,macos,linux,pycharm,pycharm+all,images,archives,sublimetext,vim
+__MACOSX
+
+src/data
+src/data/
+src/docs
+src/docs/
+src/outputs
+src/outputs/
+src/test
+
