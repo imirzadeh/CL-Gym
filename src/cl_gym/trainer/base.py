@@ -35,7 +35,7 @@ class ContinualTrainer:
             
     def on_after_training_epoch(self):
         for cb in self.callbacks:
-            cb.on_before_training_epoch(self)
+            cb.on_after_training_epoch(self)
         self.current_epoch += 1
 
     def on_before_training_step(self):
