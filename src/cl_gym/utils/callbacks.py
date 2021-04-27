@@ -148,7 +148,8 @@ class ToyRegressionVisualizer(ContinualCallback):
         net = trainer.algorithm.backbone
         net.eval()
         test_x = torch.from_numpy(np.linspace(self.x_min, self.x_max, 128).reshape((128, 1))).float()
-        pred = net(test_x).detach().clone().numpy().reshape(128)
+        test_x = test_x.to(trainer.params['device'])
+        pred = net(test_x).to('cpu').detach().clone().numpy().reshape(128)
         plt.scatter(test_x.reshape(128), pred)
         plt.ylim(-1.2, 1.2)
         plt.yticks([-1.0, -0.5, 0.0, 0.5, 1.0])
