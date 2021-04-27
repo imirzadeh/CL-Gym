@@ -1,4 +1,4 @@
-from cl_gym.metrics import AverageAccuracy, AverageForgetting
+from cl_gym.metrics import AverageMetric, AverageForgetting
 import numpy as np
 import torch
 import os
@@ -7,9 +7,18 @@ from pathlib import Path
 
 
 class ContinualCallback:
-    def __init__(self):
-        pass
-     
+    def __init__(self, name=''):
+        self.name = name
+    
+    def log_text(self, trainer, text):
+        if trainer.logger:
+            trainer.logger.log_text(text)
+        print(text)
+        
+    def log_metric(self, trainer, metric_name, metric_value, metric_step=None):
+        if trainer.logger:
+            trainer.logger.log_metric(metric_name, metric_value, metric_step)
+    
     def on_before_fit(self, trainer):
         pass
     
@@ -35,62 +44,89 @@ class ContinualCallback:
         pass
 
 
-class AccuracyLogger(ContinualCallback):
-    def __init__(self):
-        self.avg_accs = []
-        self.acc_meter = AverageAccuracy(num_tasks=8)
-        self.forget_meter = AverageForgetting(num_tasks=8)
-        super(AccuracyLogger, self).__init__()
-    
-    def on_before_training_task(self, trainer):
-        print("-------- Training task {} ----------".format(trainer.current_task))
+class MetricManager(ContinualCallback):
+    def __init__(self, num_tasks, epochs_per_task=1, intervals='tasks'):
+        super(MetricManager, self).__init__('MetricManager')
         
-    def on_after_training_task(self, trainer):
-        sum_accs = 0
-        for task in range(1, trainer.current_task + 1):
-            metrics = trainer.validate_algorithm_on_task(task)
-            acc = metrics['accuracy']
-            print(f"Validation on {task} => {metrics}")
-            self.acc_meter.update(trainer.current_task, task, acc)
-            self.forget_meter.update(trainer.current_task, task, acc)
-            sum_accs += acc
-        print(f"Average Accuracy => {sum_accs/trainer.current_task}")
-        self.avg_accs.append(round(sum_accs/trainer.current_task, 2))
+        # checks
+        if intervals.lower() not in ['tasks', 'epochs']:
+            raise ValueError("MetricManager supports only `tasks` and `epochs` for intervals.")
+        self.intervals = intervals
+        if self.intervals == 'tasks':
+            epochs_per_task = 1
+        
+        self.metric = AverageMetric(num_tasks, epochs_per_task)
+        self.forget_metric = AverageForgetting(num_tasks)
+        self.eval_type = None
+        self.save_path = None
     
-    def on_after_fit(self, trainer):
-        print(f"Average Accuracy History => {self.avg_accs}")
-        print(f"Avg acc score => {round(self.acc_meter.compute_final(), 3)}")
-        print(f"Avg forget score => {round(self.forget_meter.compute_final(), 3)}")
-
-
-class LossLogger(ContinualCallback):
-    def __init__(self, num_tasks):
-        self.num_tasks = num_tasks
-        self.avg_losses = []
-        self.loss_meter = AverageAccuracy(num_tasks=num_tasks)
-        super(LossLogger, self).__init__()
-    
+    def on_before_fit(self, trainer):
+        self.save_path = os.path.join(trainer.params['output_dir'], 'metrics')
+        Path(self.save_path).mkdir(parents=True, exist_ok=True)
+        
+        benchmark_name = str(trainer.algorithm.benchmark).lower()
+        if 'reg' in benchmark_name:
+            self.eval_type = 'regression'
+        else:
+            self.eval_type = 'classification'
+        
     def on_before_training_task(self, trainer):
-        print("-------- Training task {} ----------".format(trainer.current_task))
-    
-    def on_after_training_task(self, trainer):
-        sum_losses = 0
+        text = f"------------ Training task {trainer.current_task} -------------"
+        self.log_text(trainer, text)
+     
+    def _calculate_eval_epoch(self, trainer):
+        if self.intervals == 'epochs':
+            task_epoch = trainer.current_epoch % trainer.params['epochs_per_task']
+            if task_epoch == 0:
+                task_epoch = trainer.params['epochs_per_task']
+            return task_epoch
+        else:
+            return 1
+
+    def _collect_metrics(self, trainer):
+        eval_epoch = self._calculate_eval_epoch(trainer)
+        step = trainer.current_task if self.intervals == 'tasks' else trainer.current_epoch
         for task in range(1, trainer.current_task + 1):
-            metrics = trainer.validate_algorithm_on_task(task)
-            loss = metrics['loss']
-            print(f"Validation on {task} => {metrics}")
-            self.loss_meter.update(trainer.current_task, task, loss)
-            sum_losses += loss
-        print(f"Average Accuracy => {sum_losses / trainer.current_task}")
-        self.avg_losses.append(round(sum_losses / trainer.current_task, 4))
+            eval_metrics = trainer.validate_algorithm_on_task(task)
+            if self.eval_type == 'classification':
+                acc = eval_metrics['accuracy']
+                loss = eval_metrics['loss']
+                # update meters
+                
+                self.metric.update(trainer.current_task, task, acc, eval_epoch)
+                self.forget_metric.update(trainer.current_task, task, acc)
+                # logging
+                self.log_text(trainer, f"eval metrics for task {task}: acc={round(acc, 2)}, loss={round(loss, 5)}")
+                self.log_metric(trainer, f'acc_{task}', round(acc, 2), step)
+                self.log_metric(trainer, f'loss_{task}', round(loss, 5), step)
+                if task == trainer.current_task:
+                    self.log_metric(trainer, f'average_acc', round(self.metric.compute(trainer.current_task)), step)
+            else:
+                loss = eval_metrics['loss']
+                self.metric.update(trainer.current_task, task, loss, eval_epoch)
+                self.log_text(trainer, f"eval metrics for task {task}: loss={round(loss, 5)}")
+                self.log_metric(trainer, f'loss_{task}', round(loss, 5), step)
+                if task == trainer.current_task:
+                    self.log_metric(trainer, f'average_loss', round(self.metric.compute(trainer.current_task), 5), step)
+
+    def on_after_training_task(self, trainer):
+        if self.intervals != 'tasks':
+            return
+        self._collect_metrics(trainer)
+        
+    def on_after_training_epoch(self, trainer):
+        if self.intervals != 'epochs':
+            return
+        step = self._calculate_eval_epoch(trainer)
+        text = f"epoch {step}/{trainer.params['epochs_per_task']} >>"
+        self.log_text(trainer, text)
+        self._collect_metrics(trainer)
     
     def on_after_fit(self, trainer):
-        print(f"Average Loss History => {self.avg_losses}")
-        print(f"Avg loss score => {round(self.loss_meter.compute_final(), 4)}")
-    
-    def get_final_metric(self):
-        return self.loss_meter.compute_final()
-    
+        filepath = os.path.join(self.save_path, "metrics.npy")
+        with open(filepath, 'wb') as f:
+            np.save(f, self.metric.data)
+
 
 class ToyRegressionVisualizer(ContinualCallback):
     def __init__(self):

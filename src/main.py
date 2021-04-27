@@ -28,12 +28,13 @@ def trial(params):
     algorithm = cl.algorithms.ContinualAlgorithm(backbone, benchmark, params)
     # algorithm = cl.algorithms.OGD(backbone, benchmark, params)
     
-    metric_collector_callback = cl.callbacks.LossLogger(num_tasks=params['num_tasks'])
+    metric_manager_callback = cl.callbacks.MetricManager(num_tasks=params['num_tasks'],
+                                                         epochs_per_task=params['epochs_per_task'])
     visualizer_callback = cl.callbacks.ToyRegressionVisualizer()
     model_checkpoint_callback = cl.callbacks.ModelCheckPoint()
     experiment_manager_callback = cl.callbacks.ExperimentManager()
     trainer = cl.trainer.ContinualTrainer(algorithm, params, logger=logger,
-                                          callbacks=[metric_collector_callback,
+                                          callbacks=[metric_manager_callback,
                                                      visualizer_callback,
                                                      model_checkpoint_callback,
                                                      experiment_manager_callback])
@@ -61,7 +62,7 @@ if __name__ == "__main__":
         # algorithm
         'optimizer': 'SGD', #tune.choice(['SGD', 'Adam']),
         'momentum': 0.8,
-        'epochs_per_task': 900,
+        'epochs_per_task': 3,
         'learning_rate': 0.0136,#tune.loguniform(0.001, 0.05),
         'learning_rate_decay': 0.94,#tune.uniform(0.7, 0.99),
         'learning_rate_lower_bound': 0.0005,

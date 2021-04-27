@@ -3,7 +3,7 @@ from typing import Optional
 from cl_gym.metrics import ContinualMetric
 
 
-class AverageAccuracy(ContinualMetric):
+class AverageMetric(ContinualMetric):
     def __init__(self,
                  num_tasks: int,
                  epochs_per_task: Optional[int] = 1,
