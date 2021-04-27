@@ -167,7 +167,7 @@ class ModelCheckPoint(ContinualCallback):
         # checkpoint
         file_path = self.__get_save_path(trainer)
         # save
-        torch.save(model.state_dict(), file_path)
+        torch.save(model.to('cpu').state_dict(), file_path)
     
     def on_before_fit(self, trainer):
         # save init params
