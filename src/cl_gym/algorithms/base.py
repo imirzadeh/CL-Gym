@@ -1,0 +1,97 @@
+import torch
+from torch.utils.data import DataLoader, TensorDataset
+
+
+class ContinualAlgorithm:
+    """
+    Base class for continual learning algorithms.
+    It contains abstractions for implementing different algorithms, and also implementations shared among all algorithms.
+    """
+    def __init__(self, backbone, benchmark, params, requires_memory=False):
+        """
+        :param backbone: Neural network.
+        :param benchmark: Benchmark object for preparing task training/memory data.
+        :param params:
+        :param requires_memory: Whether the algorithm needs episodic memory/replay buffer (e.g., A-GEM) or not.
+        """
+        self.backbone = backbone
+        self.benchmark = benchmark
+        self.params = params
+        self.current_task = 1
+        self.requires_memory = requires_memory
+        self.episodic_memory_loader = None
+        self.episodic_memory_iter = None
+    
+    def setup(self):
+        pass
+    
+    def teardown(self):
+        pass
+    
+    def update_episodic_memory(self):
+        inps, targs, task_ids = [], [], []
+        for task in range(1, self.current_task+1):
+            train_loader, _ = self.benchmark.load_memory(self.current_task,
+                                                         shuffle=True,
+                                                         batch_size=self.params['batch_size_memory'])
+            for inp, targ, _ in train_loader:
+                batch_size = len(targ)
+                for i in range(batch_size):
+                    inps.append(inp[i])
+                    targs.append([targ[i]])
+                    task_ids.append(task)
+        mem_dataset = TensorDataset(torch.stack(inps), torch.tensor(targs), torch.tensor(task_ids))
+        self.episodic_memory_loader = DataLoader(mem_dataset, shuffle=True, pin_memory=True,
+                                                 batch_size=self.params['batch_size_memory'])
+        self.episodic_memory_iter = iter(self.episodic_memory_loader)
+    
+    def sample_batch_from_memory(self):
+        try:
+            batch = next(self.episodic_memory_iter)
+        except StopIteration:
+            self.episodic_memory_iter = iter(self.episodic_memory_loader)
+            batch = next(self.episodic_memory_iter)
+        
+        device = self.params['device']
+        inp, targ, task_id = batch
+        return inp.to(device), targ.to(device), task_id.to(device)
+
+    def training_task_end(self):
+        if self.requires_memory:
+            self.update_episodic_memory()
+        self.current_task += 1
+    
+    def training_epoch_end(self):
+        pass
+    
+    def training_step_end(self):
+        pass
+    
+    def prepare_train_loader(self, task_id):
+        return self.benchmark.load(task_id, self.params['batch_size_train'])[0]
+    
+    def prepare_validation_loader(self, task_id):
+        return self.benchmark.load(task_id, self.params['batch_size_validation'])[1]
+    
+    def prepare_optimizer(self, task_id):
+        if self.params.get('learning_rate_decay'):
+            lr_lower_bound = self.params.get('learning_rate_lower_bound', 0.0)
+            lr = max(self.params['learning_rate'] * (self.params['learning_rate_decay'] ** (task_id-1)), lr_lower_bound)
+        else:
+            lr = self.params['learning_rate']
+        if self.params['optimizer'].lower() == 'sgd':
+            return torch.optim.SGD(self.backbone.parameters(), lr=lr, momentum=0.8)
+        elif self.params['optimizer'].lower() == 'adam':
+            return torch.optim.Adam(self.backbone.parameters(), lr=lr)
+        else:
+            raise ValueError("Only 'SGD' and 'Adam' are accepted. To use another optimizer, override this method.")
+
+    def prepare_criterion(self, task_id):
+        return self.params['criterion']
+
+    def training_step(self, task_id, inp, targ, optimizer, criterion):
+        optimizer.zero_grad()
+        pred = self.backbone(inp, task_id)
+        loss = criterion(pred, targ)
+        loss.backward()
+        optimizer.step()

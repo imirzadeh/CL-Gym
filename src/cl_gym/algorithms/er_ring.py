@@ -1,0 +1,31 @@
+import torch
+import time
+from torch import nn
+from torch import optim
+from torch.nn import functional as F
+from cl_gym.algorithms import ContinualAlgorithm
+
+
+class ERRingBuffer(ContinualAlgorithm):
+    def __init__(self, backbone, benchmark, params):
+        super(ERRingBuffer, self).__init__(backbone, benchmark, params, requires_memory=True)
+        self.episodic_memory_iter = None
+        self.episodic_memory_loader = None
+
+    def prepare_optimizer(self, task_id):
+        lr = self.params.learning_rate*(self.params.learning_rate_decay**(task_id-1))
+        return torch.optim.SGD(self.backbone.parameters(), lr=lr, momentum=0.8)
+    
+    def training_step(self, task_id, inp, targ, optimizer, criterion):
+        optimizer.zero_grad()
+        if task_id > 1:
+            mem_inp, mem_targ, mem_task_ids = self.sample_batch_from_memory()
+            cat_inp = torch.cat([inp, mem_inp], dim=0)
+            cat_targ = torch.cat([targ, mem_targ], dim=0)
+            pred = self.backbone(cat_inp, mem_task_ids)
+            loss = criterion(pred, cat_targ)
+        else:
+            pred = self.backbone(inp, task_id)
+            loss = criterion(pred, targ)
+        loss.backward()
+        optimizer.step()
