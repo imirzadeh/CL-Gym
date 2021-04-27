@@ -116,9 +116,9 @@ class ToyRegressionVisualizer(ContinualCallback):
         plt.scatter(test_x.reshape(128), pred)
         plt.ylim(-1.2, 1.2)
         plt.yticks([-1.0, -0.5, 0.0, 0.5, 1.0])
-        filename = "reg_task_{}.png".format(trainer.current_task)
+        filename = "reg_task_{}.pdf".format(trainer.current_task)
         path = os.path.join(self.save_path, filename)
-        plt.savefig(path, dpi=200)
+        plt.savefig(path, dpi=220)
         
 
 class ExperimentManager(ContinualCallback):
