@@ -10,11 +10,19 @@ class FCBlock(nn.Module):
     (i.e., linear layer, followed by ReLU and [optionally] dropout layer)
     """
     
-    def __init__(self, inp_dim: int, out_dim: int, dropout_prob=0.0, include_activation=True):
+    def __init__(self, inp_dim: int, out_dim: int,
+                 dropout_prob: float = 0.0,
+                 include_activation=True,
+                 activation_func='ReLU'):
         super(FCBlock, self).__init__()
         if include_activation:
             # self.layers = [nn.Linear(inp_dim, out_dim), nn.ReLU(inplace=True)]
-            self.layers = [nn.Linear(inp_dim, out_dim), nn.Tanh()]
+            acts = {
+                'relu': nn.ReLU(),
+                'tanh': nn.Tanh(),
+                'sigmoid': nn.Sigmoid(),
+            }
+            self.layers = [nn.Linear(inp_dim, out_dim), acts[activation_func.lower()]]
         else:
             self.layers = [nn.Linear(inp_dim, out_dim)]
         if dropout_prob > 0.0:
@@ -31,7 +39,7 @@ class FCBlock(nn.Module):
 class MLP2Layers(ContinualBackbone):
     def __init__(self, multi_head=False, num_classes_per_head=None,
                  input_dim=784, hidden_dim_1=200, hidden_dim_2=200,
-                 output_dim=10, dropout_prob=0.0):
+                 output_dim=10, dropout_prob=0.0, activation='ReLU'):
         # model variables
         self.input_dim = input_dim
         self.hidden_dim_1 = hidden_dim_1
@@ -39,9 +47,9 @@ class MLP2Layers(ContinualBackbone):
         self.output_dim = output_dim
         self.dropout_prob = dropout_prob
         super(MLP2Layers, self).__init__(multi_head, num_classes_per_head)
-        self.block_1 = FCBlock(self.input_dim, self.hidden_dim_1, self.dropout_prob)
-        self.block_2 = FCBlock(self.hidden_dim_1, self.hidden_dim_2, self.dropout_prob)
-        self.block_3 = FCBlock(self.hidden_dim_2, self.output_dim, 0.0, include_activation=False)
+        self.block_1 = FCBlock(self.input_dim, self.hidden_dim_1, self.dropout_prob, True, activation)
+        self.block_2 = FCBlock(self.hidden_dim_1, self.hidden_dim_2, self.dropout_prob, True, activation)
+        self.block_3 = FCBlock(self.hidden_dim_2, self.output_dim, 0.0, False, activation)
     
     @torch.no_grad()
     def record_activations(self, x):
