@@ -58,8 +58,8 @@ class CometLogger(Logger):
     def log_text(self, text):
         self.experiment.log_text(text)
     
-    def log_figure(self, figure, name):
-        self.experiment.log_figure(name, figure)
+    def log_figure(self, figure, name, step=None):
+        self.experiment.log_figure(name, figure, step)
     
     def log_folder(self, folder_path):
         self.experiment.log_asset_folder(folder_path, log_file_name=False, recursive=True)
