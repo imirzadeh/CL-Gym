@@ -27,6 +27,10 @@ class Toy2DCLFDataset(Dataset):
                             2: ((0.5, -0.5), (2.0, -2.0)),
                             3: ((-0.5, -0.5), (-2.0, -2.0)),
                             4: ((-0.5, 0.5), (-2.0, 2.0))}
+            # task_centers = {1: ((0.5, 0.5), (2.0, 2.0)),
+            #                 3: ((0.5, -0.5), (2.0, -2.0)),
+            #                 2: ((-0.5, -0.5), (-2.0, -2.0)),
+            #                 4: ((-0.5, 0.5), (-2.0, 2.0))}
         else:
             raise ValueError("2D Toy Classification dataset can have either 2 or 4 tasks")
         return task_centers

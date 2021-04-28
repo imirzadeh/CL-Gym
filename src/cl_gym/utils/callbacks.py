@@ -4,6 +4,8 @@ import torch
 import os
 from matplotlib import pyplot as plt
 from pathlib import Path
+from matplotlib.colors import ListedColormap
+
 
 
 class ContinualCallback:
@@ -217,3 +219,48 @@ class ModelCheckPoint(ContinualCallback):
     def on_after_training_epoch(self, trainer):
         if self.interval == 'epoch':
             self.__save_model(trainer)
+
+
+class ToyClassificationVisualizer(ContinualCallback):
+    def __init__(self):
+        super(ToyClassificationVisualizer, self).__init__('visualizer')
+    
+    def on_before_fit(self, trainer):
+        self.save_path = os.path.join(trainer.params['output_dir'], 'plots')
+        Path(self.save_path).mkdir(parents=True, exist_ok=True)
+
+    def extract_points(self, loader):
+        xs, ys = [], []
+        for inp, targ, task_ids in loader:
+            batch_size = len(inp)
+            for batch in range(batch_size):
+                xs.append(inp[batch].numpy())
+                ys.append(targ[batch])
+        return np.array(xs), np.array(ys)
+
+    def _plot_decision_boundary(self, trainer):
+        net = trainer.algorithm.backbone.to('cpu')
+        net.eval()
+
+        h = .05
+        cm = plt.cm.RdBu
+        cm_bright = ListedColormap(['#FF0000', '#0000FF'])
+        
+        _, loader = trainer.algorithm.benchmark.load_joint(trainer.current_task, batch_size=64)
+        xx, yy = np.meshgrid(np.arange(-4, 4, h), np.arange(-4, 4, h))
+        X, y = self.extract_points(loader)
+        plt.scatter(X[:, 0], X[:, 1], c=y, cmap=cm_bright, edgecolors='k')
+        Z = net(torch.from_numpy(np.c_[xx.ravel(), yy.ravel()]).float()).data.max(1, keepdim=True)[1].detach().numpy()
+        # print(Z)
+        Z = Z.reshape(xx.shape)
+        plt.contourf(xx, yy, Z, cmap=cm, alpha=.7)
+        plt.text(-3, 2, f"Task {trainer.current_task} - Epoch {trainer.current_epoch}", fontsize=20)
+
+        plt.tight_layout()
+        plt.savefig(os.path.join(self.save_path, f'decisions-{trainer.current_epoch}.png'), dpi=200)
+        
+        # trainer.logger.log_figure(plt, 'decisions', step=trainer.current_epoch)
+        plt.close('all')
+        
+    def on_after_training_epoch(self, trainer):
+        self._plot_decision_boundary(trainer)
