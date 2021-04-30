@@ -136,6 +136,7 @@ class ToyRegressionVisualizer(ContinualCallback):
                  lambda x: 2. * np.power(x, 2) - 1,
                  lambda x: np.power(x - 3., 3)]
         self.domains = [[-4, -2], [-1, 1], [2, 4]]
+        self.colors = ['#36008D', '#FE5E54', '#00C9B8']
         self.x_min = -4.5
         self.x_max = 4.5
         self.save_path = None
@@ -145,21 +146,38 @@ class ToyRegressionVisualizer(ContinualCallback):
     def on_before_fit(self, trainer):
         self.save_path = os.path.join(trainer.params['output_dir'], 'plots')
         Path(self.save_path).mkdir(parents=True, exist_ok=True)
-
-    def on_after_training_task(self, trainer):
+    
+    def plot_task(self, trainer, task=1):
         net = trainer.algorithm.backbone
         net.eval()
-        test_x = torch.from_numpy(np.linspace(self.x_min, self.x_max, 128).reshape((128, 1))).float()
+        # data
+        num_examples = 12
+        x_min, x_max = self.domains[task-1]
+        color = self.colors[task-1]
+        data = np.linspace(x_min, x_max, num_examples).reshape((num_examples, 1))
+        test_x = torch.from_numpy(data).float()
         test_x = test_x.to(trainer.params['device'])
-        pred = net(test_x).to('cpu').detach().clone().numpy().reshape(128)
-        plt.scatter(test_x.reshape(128), pred)
-        plt.ylim(-1.2, 1.2)
-        plt.yticks([-1.0, -0.5, 0.0, 0.5, 1.0])
+        test_y = np.vectorize(self.map_functions[task-1])(test_x).reshape(num_examples, 1)
+
+        pred = net(test_x).to('cpu').detach().clone().numpy().reshape(num_examples)
+        plt.plot(data.reshape(num_examples), test_y.reshape(num_examples),
+                 color=color, alpha=0.6, linewidth=3)
+        plt.plot(test_x.reshape(num_examples), pred,
+                    color=color, linewidth=3, linestyle='--')
+        plt.ylim(-2.5, 2.5)
+        plt.yticks([-2, -1, 0, 1, 2])
+        plt.xticks([-4, -3, -2, -1, 0, 1, 2, 3, 4])
+        plt.xlim(-4.5, 4.5)
+
+    def on_after_training_task(self, trainer):
+        for task in range(1, trainer.current_task+1):
+            self.plot_task(trainer, task)
         filename = f"reg_task_{trainer.current_task}"
         path = f"{os.path.join(self.save_path, filename)}.pdf"
         if trainer.logger:
             trainer.logger.log_figure(plt, filename)
         plt.savefig(path, dpi=220)
+        plt.close('all')
         
 
 class ExperimentManager(ContinualCallback):
