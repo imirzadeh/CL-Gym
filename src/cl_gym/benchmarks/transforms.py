@@ -45,7 +45,7 @@ class RotationTransform:
         self.angle = angle
     
     def __call__(self, x):
-        return rotate(x, self.angle, fill=(0,), resample=PIL.Image.BILINEAR)
+        return rotate(x, self.angle, fill=(0,), interpolation=torchvision.transforms.InterpolationMode.BILINEAR)
 
 
 class PermuteTransform:
