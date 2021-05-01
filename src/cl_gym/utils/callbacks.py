@@ -161,7 +161,7 @@ class ToyRegressionVisualizer(ContinualCallback):
         pred = net(test_x).to('cpu').detach().clone().numpy().reshape(num_examples)
         plt.plot(data.reshape(num_examples), test_y.reshape(num_examples),
                  color=color, alpha=0.6, linewidth=3)
-        plt.plot(test_x.reshape(num_examples), pred,
+        plt.plot(test_x.cpu().numpy().reshape(num_examples), pred,
                     color=color, linewidth=3, linestyle='--')
         plt.ylim(-2.5, 2.5)
         plt.yticks([-2, -1, 0, 1, 2])
