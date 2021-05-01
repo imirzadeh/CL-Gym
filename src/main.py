@@ -129,5 +129,5 @@ if __name__ == "__main__":
     #                     scheduler=sched, num_samples=10, config=params)
     # print("Best config is:", analysis.best_config)
     # trial_toy_regression(toy_reg_params)
-    trial_toy_classification(toy_clf_params)
-    # trial_rot_mnist(rot_mnist_params)
+    # trial_toy_classification(toy_clf_params)
+    trial_rot_mnist(rot_mnist_params)
