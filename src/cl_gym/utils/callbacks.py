@@ -7,7 +7,6 @@ from pathlib import Path
 from matplotlib.colors import ListedColormap
 
 
-
 class ContinualCallback:
     def __init__(self, name=''):
         self.name = name
@@ -157,7 +156,7 @@ class ToyRegressionVisualizer(ContinualCallback):
         data = np.linspace(x_min, x_max, num_examples).reshape((num_examples, 1))
         test_x = torch.from_numpy(data).float()
         test_x = test_x.to(trainer.params['device'])
-        test_y = np.vectorize(self.map_functions[task-1])(test_x).reshape(num_examples, 1)
+        test_y = np.vectorize(self.map_functions[task-1])(test_x.cpu().numpy()).reshape(num_examples, 1)
 
         pred = net(test_x).to('cpu').detach().clone().numpy().reshape(num_examples)
         plt.plot(data.reshape(num_examples), test_y.reshape(num_examples),
