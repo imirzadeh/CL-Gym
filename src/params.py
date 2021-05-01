@@ -1,3 +1,4 @@
+import os
 import torch
 
 toy_reg_params = {
@@ -76,6 +77,7 @@ rot_mnist_params = {
     'batch_size_validation': 128,
     'per_task_memory_examples': 10,
     'per_task_joint_examples': 70,
+    'num_dataloader_workers': os.cpu_count()//2,
     
     # backbone
     'input_dim': 784,
