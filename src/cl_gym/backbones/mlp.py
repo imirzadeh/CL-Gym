@@ -52,17 +52,16 @@ class MLP2Layers(ContinualBackbone):
         self.block_2 = FCBlock(self.hidden_dim_1, self.hidden_dim_2, self.dropout_prob, True, activation)
         self.block_3 = FCBlock(self.hidden_dim_2, self.output_dim, 0.0, include_final_layer_act, activation)
     
-    @torch.no_grad()
-    def record_activations(self, x):
+    def record_activations(self, x, detach=True):
         result = {}
         x = x.view(x.shape[0], -1)
         
         out = self.block_1(x)
-        result['block_1'] = out.detach().clone()
+        result['block_1'] = out if not detach else out.detach().clone()
         
         out = self.block_2(out)
-        result['block_2'] = out.detach().clone()
-        
+        result['block_2'] = out if not detach else out.detach().clone()
+
         result['total'] = torch.cat((result['block_1'], result['block_2']), dim=1)
         return result
     
