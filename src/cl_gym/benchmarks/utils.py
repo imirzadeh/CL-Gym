@@ -1,12 +1,13 @@
+import os
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-DIR = './outputs/tests'
+import os
+dirname = os.path.dirname(__file__)
+DEFAULT_DATASET_DIR = os.path.join(dirname, '..', 'data')
 
-
-DEFAULT_DATASET_DIR = './data/'
 
 
 def _get_first_batch(loader):
