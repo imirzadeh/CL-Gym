@@ -6,7 +6,7 @@ from ray import tune
 toy_reg_params = {
     # benchmark
     'num_tasks': 3,
-    'batch_size_train': tune.grid_search([8, 16, 32, 64]),
+    'batch_size_train': tune.choice([8, 16, 32, 64]),
     'batch_size_memory': 32,
     'batch_size_validation': 128,
     'per_task_memory_examples': 10,
@@ -15,19 +15,19 @@ toy_reg_params = {
     
     # backbone
     'input_dim': 1,
-    'hidden_1_dim': tune.grid_search([10, 20]),
-    'hidden_2_dim': tune.grid_search([10, 20]),
+    'hidden_1_dim': tune.choice([10, 20]),
+    'hidden_2_dim': tune.choice([10, 20]),
     'hidden_3_dim': 10,
     'hidden_4_dim': 10,
     'output_dim': 1,
     'dropout_prob': tune.uniform(0.00, 0.25),
     'activation': 'Tanh',
-    'final_layer_act': tune.grid_search([False, True]),
+    'final_layer_act': tune.choice([False, True]),
     
     # algorithm
     'optimizer': tune.choice(['SGD', 'Adam']),
     'momentum': tune.uniform(0.1, 0.9),
-    'epochs_per_task': tune.grid_search([100, 500, 1000]),
+    'epochs_per_task': tune.choice([100, 500, 1000]),
     'learning_rate': tune.loguniform(0.001, 0.05),
     'learning_rate_decay': tune.uniform(0.7, 0.999),
     'learning_rate_lower_bound': 0.0005,

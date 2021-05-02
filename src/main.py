@@ -130,9 +130,13 @@ def trial_rot_mnist(params):
 
 if __name__ == "__main__":
     from params import toy_clf_params, toy_reg_params, rot_mnist_params
-    sched = AsyncHyperBandScheduler(metric='average_loss', mode='min')
+    sched = AsyncHyperBandScheduler()
+    from ray.tune.suggest.optuna import OptunaSearch
+    optuna_search = OptunaSearch(metric='average_loss', mode='min')
     analysis = tune.run(trial_toy_regression,
-                        scheduler=sched, num_samples=2, config=toy_reg_params)
+                        metric='average_loss', mode='min',
+                        scheduler=sched, search_alg=optuna_search,
+                        num_samples=150, config=toy_reg_params)
     print("Best config is:", analysis.best_config)
     # trial_toy_regression(toy_reg_params)
     # trial_toy_classification(toy_clf_params)
