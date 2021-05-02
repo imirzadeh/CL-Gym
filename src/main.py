@@ -99,8 +99,9 @@ def trial_rot_mnist(params):
     params['output_dir'] = os.path.join("./outputs/{}".format(trial_id))
     Path(params['output_dir']).mkdir(parents=True, exist_ok=True)
     
-    logger = cl.utils.loggers.CometLogger(project_name='debug-2', workspace='cl-boundary', trial_name=trial_id)
+    logger = cl.utils.loggers.CometLogger(project_name='orm-mnist-pilot', workspace='cl-boundary', trial_name=trial_id)
     benchmark = cl.benchmarks.RotatedMNIST(num_tasks=params['num_tasks'],
+                                           per_task_rotation=10.0,
                                            per_task_memory_examples=params['per_task_memory_examples'],
                                            per_task_joint_examples=params['per_task_joint_examples'])
     
@@ -112,8 +113,9 @@ def trial_rot_mnist(params):
                                        activation=params.get("activation", 'ReLU'),
                                        include_final_layer_act=False)
     
-    algorithm = cl.algorithms.ContinualAlgorithm(backbone, benchmark, params)
+    # algorithm = cl.algorithms.ContinualAlgorithm(backbone, benchmark, params)
     # algorithm = cl.algorithms.OGD(backbone, benchmark, params)
+    algorithm = cl.algorithms.ORM(backbone, benchmark, params)
     
     metric_manager_callback = cl.callbacks.MetricManager(num_tasks=params['num_tasks'],
                                                          epochs_per_task=params['epochs_per_task'])
@@ -133,10 +135,11 @@ if __name__ == "__main__":
     # sched = AsyncHyperBandScheduler()
     from ray.tune.suggest.optuna import OptunaSearch
     optuna_search = OptunaSearch(metric='average_loss', mode='min')
-    analysis = tune.run(trial_toy_regression,
+    analysis = tune.run(trial_rot_mnist,
                         metric='average_loss', mode='min',
                         search_alg=optuna_search,
-                        num_samples=150, config=toy_reg_params)
+                        resources_per_trial={"gpu": 1},
+                        num_samples=25, config=rot_mnist_params)
     print("Best config is:", analysis.best_config)
     # trial_toy_regression(toy_reg_params)
     # trial_toy_classification(toy_clf_params)
