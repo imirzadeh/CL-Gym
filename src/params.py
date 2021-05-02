@@ -105,6 +105,6 @@ rot_mnist_params = {
     'learning_rate_lower_bound': tune.choice([0.0002, 0.0005]),
     'criterion': torch.nn.CrossEntropyLoss(),
     'device': torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
-    'mcsgd_init_pos': 0.9,
-    'mscgd_line_samples': 10,
+    'grad_clip_val': tune.uniform(0.2, 1.0),
+    'orm_orthogonal_scale': tune.uniform(1, 10)
 }
