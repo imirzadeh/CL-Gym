@@ -5,6 +5,7 @@ import os
 from matplotlib import pyplot as plt
 from pathlib import Path
 from matplotlib.colors import ListedColormap
+from ray import tune
 
 
 class ContinualCallback:
@@ -46,8 +47,9 @@ class ContinualCallback:
 
 
 class MetricManager(ContinualCallback):
-    def __init__(self, num_tasks, epochs_per_task=1, intervals='tasks'):
+    def __init__(self, num_tasks, epochs_per_task=1, intervals='tasks', tuner=True):
         super(MetricManager, self).__init__('MetricManager')
+        self.tuner = tuner
         
         # checks
         if intervals.lower() not in ['tasks', 'epochs']:
@@ -108,7 +110,10 @@ class MetricManager(ContinualCallback):
                 self.log_text(trainer, f"eval metrics for task {task}: loss={round(loss, 5)}")
                 self.log_metric(trainer, f'loss_{task}', round(loss, 5), step)
                 if task == trainer.current_task:
-                    self.log_metric(trainer, f'average_loss', round(self.metric.compute(trainer.current_task), 5), step)
+                    avg_loss = round(self.metric.compute(trainer.current_task), 5)
+                    self.log_metric(trainer, f'average_loss', avg_loss, step)
+                    if self.tuner:
+                        tune.report(average_loss=avg_loss)
 
     def on_after_training_task(self, trainer):
         if self.intervals != 'tasks':

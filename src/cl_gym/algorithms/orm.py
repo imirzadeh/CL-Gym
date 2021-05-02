@@ -39,10 +39,11 @@ class ORM(ContinualAlgorithm):
         pred = self.backbone(inp, task_id)
         loss = criterion(pred, targ)
         if self.current_task > 1:
-            loss += self._orthogonal_repr_loss(inp) / 2.0
+            loss += self._orthogonal_repr_loss(inp) / self.params['orm_orthogonal_scale']
             # loss_orthogonal = self._orthogonal_repr_loss(inp) / 2.0
             # loss_orthogonal.backward()
             # nn.utils.clip_grad_value_(self.backbone.parameters(), clip_value=0.5)
         loss.backward()
-        nn.utils.clip_grad_value_(self.backbone.parameters(), clip_value=0.1)
+        if self.params.get("grad_clip_val"):
+            nn.utils.clip_grad_value_(self.backbone.parameters(), clip_value=self.params['grad_clip_val'])
         optimizer.step()

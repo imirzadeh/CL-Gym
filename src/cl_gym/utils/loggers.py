@@ -1,5 +1,6 @@
-import os
+import comet_ml
 from comet_ml import Experiment
+import os
 
 
 class Logger:
