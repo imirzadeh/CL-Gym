@@ -5,5 +5,6 @@ from cl_gym.algorithms.ewc import EWC
 from cl_gym.algorithms.ogd import OGD
 from cl_gym.algorithms.mcsgd import MCSGD
 from cl_gym.algorithms.mtl import Multitask
+from cl_gym.algorithms.orm import ORM
 
-__all__ = ['ContinualAlgorithm', 'AGEM', 'ERRingBuffer', 'EWC', 'OGD', 'MCSGD', 'Multitask']
+__all__ = ['ContinualAlgorithm', 'AGEM', 'ERRingBuffer', 'EWC', 'OGD', 'ORM', 'MCSGD', 'Multitask']
