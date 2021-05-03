@@ -103,7 +103,10 @@ class MetricManager(ContinualCallback):
                 self.log_metric(trainer, f'acc_{task}', round(acc, 2), step)
                 self.log_metric(trainer, f'loss_{task}', round(loss, 5), step)
                 if task == trainer.current_task:
-                    self.log_metric(trainer, f'average_acc', round(self.metric.compute(trainer.current_task)), step)
+                    avg_acc = round(self.metric.compute(trainer.current_task), 2)
+                    self.log_metric(trainer, f'average_acc', avg_acc, step)
+                    if self.tuner:
+                        tune.report(average_loss=avg_acc)
             else:
                 loss = eval_metrics['loss']
                 self.metric.update(trainer.current_task, task, loss, eval_epoch)
