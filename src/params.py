@@ -100,11 +100,11 @@ rot_mnist_params = {
     'optimizer': tune.choice(['SGD', 'Adam']),
     'momentum': tune.uniform(0.5, 0.9),
     'epochs_per_task': 1,
-    'learning_rate':  tune.loguniform(0.001, 0.15),
-    'learning_rate_decay': tune.uniform(0.4, 0.99),
+    'learning_rate':  tune.loguniform(0.001, 0.22),
+    'learning_rate_decay': tune.uniform(0.4, 1.0),
     'learning_rate_lower_bound': tune.choice([0.0002, 0.0005]),
     'criterion': torch.nn.CrossEntropyLoss(),
     'device': torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
-    'grad_clip_val': tune.uniform(0.2, 2.0),
+    # 'grad_clip_val': 0.0,
     'orm_orthogonal_scale': tune.uniform(1, 10)
 }
