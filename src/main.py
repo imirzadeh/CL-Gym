@@ -101,7 +101,7 @@ def trial_rot_mnist(params):
     
     logger = cl.utils.loggers.CometLogger(project_name='orm-mnist-pilot', workspace='cl-boundary', trial_name=trial_id)
     benchmark = cl.benchmarks.RotatedMNIST(num_tasks=params['num_tasks'],
-                                           per_task_rotation=10.0,
+                                           per_task_rotation=9.0,
                                            per_task_memory_examples=params['per_task_memory_examples'],
                                            per_task_joint_examples=params['per_task_joint_examples'])
     
