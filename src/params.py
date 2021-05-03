@@ -77,7 +77,7 @@ toy_clf_params = {
 
 rot_mnist_params = {
     # benchmark
-    'num_tasks': 10,
+    'num_tasks': 20,
     'batch_size_train': tune.choice([8, 16, 32, 64]),
     'batch_size_memory': 32,
     'batch_size_validation': 256,
@@ -92,7 +92,7 @@ rot_mnist_params = {
     'hidden_3_dim': 256,
     'hidden_4_dim': 256,
     'output_dim': 10,
-    'dropout_prob': tune.uniform(0.0, 0.25),
+    'dropout_prob': tune.uniform(0.0, 0.5),
     'activation': 'ReLU',
     'final_layer_act': False,
     
@@ -100,11 +100,11 @@ rot_mnist_params = {
     'optimizer': tune.choice(['SGD', 'Adam']),
     'momentum': tune.uniform(0.5, 0.9),
     'epochs_per_task': 1,
-    'learning_rate':  tune.loguniform(0.001, 0.05),
+    'learning_rate':  tune.loguniform(0.001, 0.15),
     'learning_rate_decay': tune.uniform(0.4, 0.99),
     'learning_rate_lower_bound': tune.choice([0.0002, 0.0005]),
     'criterion': torch.nn.CrossEntropyLoss(),
     'device': torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
-    'grad_clip_val': tune.uniform(0.2, 1.0),
+    'grad_clip_val': tune.uniform(0.2, 2.0),
     'orm_orthogonal_scale': tune.uniform(1, 10)
 }
