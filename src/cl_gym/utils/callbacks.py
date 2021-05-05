@@ -2,10 +2,14 @@ from cl_gym.metrics import AverageMetric, AverageForgetting
 import numpy as np
 import torch
 import os
+import matplotlib
 from matplotlib import pyplot as plt
 from pathlib import Path
 from matplotlib.colors import ListedColormap
 from ray import tune
+import seaborn as sns
+
+np.set_printoptions(precision=4, suppress=True)
 
 
 class ContinualCallback:
@@ -289,3 +293,95 @@ class ToyClassificationVisualizer(ContinualCallback):
         
     def on_after_training_epoch(self, trainer):
         self._plot_decision_boundary(trainer)
+
+
+class NeuralActivationVisualizer(ContinualCallback):
+    def __init__(self, block_keys=('block_1', 'block_2')):
+        self.block_keys = block_keys
+        self.acts_history = {}
+        super(NeuralActivationVisualizer, self).__init__('visualizer')
+
+    def on_before_fit(self, trainer):
+        self.save_path = os.path.join(trainer.params['output_dir'], 'plots')
+        Path(self.save_path).mkdir(parents=True, exist_ok=True)
+    
+    def __get_activations(self, trainer, task: int, mean_reduction=False):
+        acts = {}
+        net = trainer.algorithm.backbone
+        device = trainer.algorithm.params['device']
+        net = net.to(device)
+        net.eval()
+        train_loader, val_loader = trainer.algorithm.benchmark.load(task, batch_size=32)
+        with torch.no_grad():
+            for batch in val_loader:
+                inp, targ, task_ids = batch
+                net_acts = net.record_activations(inp.to(device))
+                for key in self.block_keys:
+                    key_acts = net_acts[key].cpu().numpy()
+                    if acts.get(key):
+                        acts[key] = np.concatenate(acts[key], key_acts, axis=0)
+                    else:
+                        acts[key] = key_acts
+        if mean_reduction:
+            mean_acts = {}
+            for key in acts:
+                mean_acts[key] = np.mean(acts[key], axis=0)
+            return mean_acts
+        else:
+            return acts
+                
+    def on_after_training_task(self, trainer):
+        current_task = trainer.current_task
+        if not self.acts_history.get(current_task):
+            self.acts_history[current_task] = {}
+            
+        for prev_task in range(1, current_task+1):
+            acts = self.__get_activations(trainer, prev_task, mean_reduction=True)
+            self.acts_history[current_task][prev_task] = acts
+    
+    def on_after_fit(self, trainer):
+        fig, all_axs = plt.subplots(nrows=trainer.current_task-1,
+                                    ncols=len(self.block_keys),
+                                    sharex='row', sharey='row')
+        if trainer.params.get("activation", "").lower() == 'relu':
+            vmin, vmax = 0.0, 1.0
+
+        elif trainer.params.get("activation", "").lower() == 'tanh':
+            vmin, vmax = -1.0, 1.0
+
+        elif trainer.params.get("activation", "").lower() == 'sigmoid':
+            vmin, vmax = 0.0, 1.0
+        else:
+            vmin, vmax = None, None
+        for current_task in range(1, trainer.current_task):
+            task_acts = {k: [] for k in self.block_keys}
+            for next_task in range(current_task, trainer.current_task):
+                acts = self.acts_history[next_task][current_task]
+                for key in acts:
+                    task_acts[key].append(acts[key])
+            axs = all_axs[current_task-1]
+
+            for i, key in enumerate(task_acts.keys()):
+                # cbar = True if current_task == trainer.current_task-1 and i == len(task_acts.keys())-1 else False
+                im = sns.heatmap(np.array(task_acts[key]), cmap="YlGnBu",
+                            cbar_kws={"orientation": "horizontal"},
+                            vmin=vmin, vmax=vmax,
+                            square=True, ax=axs[i],
+                            cbar=False)
+                axs[i].set_xlabel(f'Neurons({key})')
+                axs[i].set_yticklabels(range(current_task, trainer.current_task))
+                axs[i].set_ylabel('Tasks')
+        # fig.colorbar(im, ax=all_axs.ravel().tolist())
+        # from mpl_toolkits.axes_grid1 import make_axes_locatable
+        # divider = make_axes_locatable(all_axs)
+        # cax = divider.append_axes("right", size="5%", pad=0.05)
+        mappable = plt.cm.ScalarMappable(norm=matplotlib.colors.Normalize(vmin, vmax), cmap="YlGnBu")
+        fig.colorbar(mappable, ax=all_axs,  orientation='horizontal', fraction=0.05)
+
+        # plt.tight_layout()
+        plt.savefig(os.path.join(self.save_path, f'acts.png'), dpi=200)
+        plt.close(fig)
+            
+            
+                    
+
