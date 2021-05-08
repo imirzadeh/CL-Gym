@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
 from cl_gym.utils.callbacks import ContinualCallback
 
-matplotlib.rcParams['text.latex.preamble'] = [r'\usepackage{amsmath}']
+matplotlib.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
 np.set_printoptions(precision=4, suppress=True)
 
 
@@ -253,9 +253,13 @@ class ActTransitionTracker(ContinualCallback):
         self.block_keys = blocks
         self.task_codes = {}
         self.task_loaders = {}
+        self.distances_cache = {}
         super(ActTransitionTracker, self).__init__('TransitionTracker')
     
     def on_before_fit(self, trainer):
+        self.save_path = os.path.join(trainer.params['output_dir'], 'plots')
+        Path(self.save_path).mkdir(parents=True, exist_ok=True)
+        
         for task in range(1, trainer.params['num_tasks'] + 1):
             device = trainer.params['device']
             batch_size = trainer.params['per_task_subset_examples']
@@ -264,6 +268,11 @@ class ActTransitionTracker(ContinualCallback):
                                                              pin_memory=True if 'cuda' in str(device) else False)
             self.task_loaders[task] = val_loader
     
+    def add_to_distance_cache(self, key, value, step):
+        if not self.distances_cache.get(key):
+            self.distances_cache[key] = []
+        self.distances_cache[key].append((step, value))
+        
     def on_after_training_epoch(self, trainer):
         current_task = trainer.current_task
         if current_task <= 1:
@@ -275,7 +284,10 @@ class ActTransitionTracker(ContinualCallback):
                 ref = prev_task_reference_codes[key]
                 cur = prev_task_current_codes[key]
                 dist = self.__calculate_distance(ref, cur)
-                print(f"prev_task>> {prev_task}, key={key}, dist={dist}")
+                metric_name = f'code_dist_task_{prev_task}_{key}'
+                self.add_to_distance_cache(metric_name, dist, trainer.current_epoch)
+                if trainer.logger:
+                    trainer.logger.log_metric(metric_name, dist, step=trainer.current_epoch)
     
     def on_after_training_task(self, trainer):
         self.task_codes[trainer.current_task] = self.__calculate_codes(trainer, trainer.current_task)
@@ -300,4 +312,28 @@ class ActTransitionTracker(ContinualCallback):
                 for key in acts:
                     codes[key] = (acts[key] > 0.0).type(torch.float)  # .cpu().numpy()
         return codes
+    
+    def _plot_code_distances(self, trainer):
+        sns.set_style('whitegrid')
+        plt.close('all')
+        colors = ['#636EFA', '#00CC96', '#EF553B', '#AB63FA']
+        block_to_name = {'block_1': 'layer 1', 'block_2': 'layer 2', 'total': 'total'}
+        
+        for task in range(1, trainer.current_task):
+            start, end = 100000, -100000
+            for i, key in enumerate(self.task_codes[task].keys()):
+                metric_name = f'code_dist_task_{task}_{key}'
+                steps = [x[0] for x in self.distances_cache[metric_name]]
+                start, end = min(start, min(steps)), max(end, max(steps))
+                vals = [x[1] for x in self.distances_cache[metric_name]]
+                plt.plot(steps, vals, color=colors[i], label=f"Task{task}-{block_to_name[key]}")
+            plt.xticks(range(start, end+1))
+            plt.legend(loc='upper left')
+            plt.tight_layout()
+            plt.savefig(os.path.join(self.save_path, f"transitions_task{task}.pdf"), dpi=200)
+            plt.close()
+
+
+    def on_after_fit(self, trainer):
+        self._plot_code_distances(trainer)
 
