@@ -313,21 +313,28 @@ class ActTransitionTracker(ContinualCallback):
                     codes[key] = (acts[key] > 0.0).type(torch.float)  # .cpu().numpy()
         return codes
     
+    def __calculate_xticks(self, trainer, task):
+        epochs_per_task = trainer.params['epochs_per_task']
+        total_tasks = trainer.params['num_tasks']
+        start = (task-1)*epochs_per_task + 1
+        ticks = [(t-task)*epochs_per_task+start for t in range(task+1, total_tasks+1)] + [total_tasks*epochs_per_task]
+        return ticks
+        
     def _plot_code_distances(self, trainer):
         sns.set_style('whitegrid')
         plt.close('all')
         colors = ['#636EFA', '#00CC96', '#EF553B', '#AB63FA']
         block_to_name = {'block_1': 'layer 1', 'block_2': 'layer 2', 'total': 'total'}
         
-        for task in range(1, trainer.current_task):
-            start, end = 100000, -100000
+        for task in range(1, trainer.current_task-1):
             for i, key in enumerate(self.task_codes[task].keys()):
                 metric_name = f'code_dist_task_{task}_{key}'
                 steps = [x[0] for x in self.distances_cache[metric_name]]
-                start, end = min(start, min(steps)), max(end, max(steps))
                 vals = [x[1] for x in self.distances_cache[metric_name]]
-                plt.plot(steps, vals, color=colors[i], label=f"Task{task}-{block_to_name[key]}")
-            plt.xticks(range(start, end+1))
+                plt.plot(steps, vals, color=colors[i], label=f"{block_to_name[key]}")
+            plt.xlabel("Epochs")
+            plt.ylabel("Transitions (Task {task})")
+            plt.xticks(self.__calculate_xticks(trainer, task))
             plt.legend(loc='upper left')
             plt.tight_layout()
             plt.savefig(os.path.join(self.save_path, f"transitions_task{task}.pdf"), dpi=200)
