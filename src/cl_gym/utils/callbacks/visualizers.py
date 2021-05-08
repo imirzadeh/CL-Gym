@@ -123,6 +123,7 @@ class ToyClassificationVisualizer(ContinualCallback):
 
 
 class NeuralActivationVisualizer(ContinualCallback):
+    # TODO: save activations as numpy array
     def __init__(self, block_keys=('block_1', 'block_2')):
         self.block_keys = block_keys
         self.acts_history = {}
@@ -214,13 +215,20 @@ class NeuralActivationVisualizer(ContinualCallback):
             axs[i].set_yticklabels(range(task, trainer.current_task))
             axs[i].set_ylabel('Tasks')
 
-        mappable = plt.cm.ScalarMappable(norm=matplotlib.colors.Normalize(vmin, vmax), cmap="YlGnBu")
-        fig.colorbar(mappable, ax=axs, orientation='horizontal', fraction=0.03)
+        # mappable = plt.cm.ScalarMappable(norm=matplotlib.colors.Normalize(vmin, vmax), cmap="YlGnBu")
+        # fig.colorbar(mappable, ax=axs, orientation='horizontal', fraction=0.03)
         
         return fig
     
+    def save_task_history(self, task, task_act_history, trainer):
+        save_path = os.path.join(trainer.params['output_dir'], 'acts')
+        Path(save_path).mkdir(parents=True, exist_ok=True)
+        filename = os.path.join(save_path, f"acts_history_{task}.npz")
+        np.savez(filename, **task_act_history)
+
     def plot_activation_history(self, task, trainer):
         task_act_history = self._extract_task_activation_history(task, trainer)
+        self.save_task_history(task, task_act_history, trainer)
         return self.plot_heatmap(task, task_act_history, trainer)
     
     def on_after_fit(self, trainer):
