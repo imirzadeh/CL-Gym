@@ -1,6 +1,6 @@
 import numpy as np
 from typing import Optional
-from cl_gym.metrics import ContinualMetric
+from cl_gym.utils.metrics import ContinualMetric
 
 
 class AverageMetric(ContinualMetric):

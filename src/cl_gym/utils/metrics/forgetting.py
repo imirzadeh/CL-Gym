@@ -1,5 +1,5 @@
 import numpy as np
-from cl_gym.metrics import ContinualMetric
+from cl_gym.utils.metrics import ContinualMetric
 
 
 class AverageForgetting(ContinualMetric):
