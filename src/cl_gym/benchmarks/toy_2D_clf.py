@@ -6,6 +6,8 @@ from cl_gym.benchmarks import Benchmark
 
 DEFAULT_TOY_DATASET_SIZE = 200
 DEFAULT_CLUSTER_STD = 0.3
+SMALL_COORD = 0.5
+LARGE_COORD = 2.0
 
 
 class Toy2DCLFDataset(Dataset):
@@ -20,13 +22,13 @@ class Toy2DCLFDataset(Dataset):
     
     def __get_centers(self):
         if self.num_tasks == 2:
-            task_centers = {1: ((0.5, 0.5), (2.0, 2.0)),
-                            2: ((-0.5, -0.5), (-2.0, -2.0))}
+            task_centers = {1: ((SMALL_COORD, SMALL_COORD), (LARGE_COORD, LARGE_COORD)),
+                            2: ((-SMALL_COORD, -SMALL_COORD), (-LARGE_COORD, -LARGE_COORD))}
         elif self.num_tasks == 4:
-            task_centers = {1: ((0.5, 0.5), (2.0, 2.0)),
-                            2: ((0.5, -0.5), (2.0, -2.0)),
-                            3: ((-0.5, -0.5), (-2.0, -2.0)),
-                            4: ((-0.5, 0.5), (-2.0, 2.0))}
+            task_centers = {1: ((SMALL_COORD, SMALL_COORD), (LARGE_COORD, LARGE_COORD)),
+                            2: ((SMALL_COORD, -SMALL_COORD), (LARGE_COORD, -LARGE_COORD)),
+                            3: ((-SMALL_COORD, -SMALL_COORD), (-LARGE_COORD, -LARGE_COORD)),
+                            4: ((-SMALL_COORD, SMALL_COORD), (-LARGE_COORD, LARGE_COORD))}
             # task_centers = {1: ((0.5, 0.5), (2.0, 2.0)),
             #                 3: ((0.5, -0.5), (2.0, -2.0)),
             #                 2: ((-0.5, -0.5), (-2.0, -2.0)),
