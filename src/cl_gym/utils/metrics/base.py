@@ -26,6 +26,12 @@ class ContinualMetric:
         
         self.data[task_learned-1][task_evaluated-1][epoch-1][validation_step-1] = value
     
+    def get_raw_history(self, task: int, ravel=True):
+        history = self.data[:, task-1, :, :]
+        if ravel:
+            return np.ravel(history)
+        return history
+    
     def compute(self, current_task: int):
         raise NotImplementedError
     
