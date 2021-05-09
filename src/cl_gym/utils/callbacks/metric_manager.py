@@ -1,14 +1,22 @@
 import os
+import matplotlib
 import numpy as np
 from ray import tune
+import seaborn as sns
 from pathlib import Path
+from matplotlib import rc
+from matplotlib import pyplot as plt
 from cl_gym.utils.callbacks import ContinualCallback
 from cl_gym.utils.metrics import AverageMetric, AverageForgetting
+matplotlib.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
+np.set_printoptions(precision=4, suppress=True)
 
 
 class MetricManager(ContinualCallback):
     def __init__(self, num_tasks, epochs_per_task=1, intervals='tasks', tuner=True):
         super(MetricManager, self).__init__('MetricManager')
+        self.num_tasks = num_tasks
+        self.epochs_per_task = epochs_per_task
         self.tuner = tuner
         
         # checks
@@ -86,12 +94,63 @@ class MetricManager(ContinualCallback):
     def on_after_training_epoch(self, trainer):
         if self.intervals != 'epochs':
             return
-        step = self._calculate_eval_epoch(trainer)
-        text = f"epoch {step}/{trainer.params['epochs_per_task']} >>"
-        self.log_text(trainer, text)
+        # step = self._calculate_eval_epoch(trainer)
+        # text = f"epoch {step}/{trainer.params['epochs_per_task']} >>"
+        # self.log_text(trainer, text)
         self._collect_metrics(trainer)
     
+    def get_plot_colors(self):
+        if self.num_tasks <= 10:
+            colors = ['#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A',
+                      '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', '#FECB52']
+        else:
+            colors = ['#00429d', '#26559c', '#3a679c', '#4c7a9b', '#5e8c9b',
+                      '#719e9a', '#86af9a', '#9dc09a', '#b6d19b', '#d2e19b',
+                      '#ffe488', '#ffc981', '#ffad78', '#fa9270', '#f17867',
+                      '#e55e5f', '#d64456', '#c42a4d', '#ae1044', '#93003a']
+        return colors
+    
+    def get_plot_xticks(self):
+        if self.intervals == 'tasks':
+            return range(1, self.num_tasks+1)
+        else:
+            return list(range(1, (self.num_tasks+1)*self.epochs_per_task, self.epochs_per_task))
+    
+    def plot_metrics(self, trainer):
+        plt.close('all')
+        rc('text', usetex=True)
+        sns.set_context("paper", rc={"lines.linewidth": 3.5,
+                                     'xtick.labelsize': 20,
+                                     'ytick.labelsize': 20,
+                                     'lines.markersize': 8,
+                                     'legend.fontsize': 17,
+                                     'axes.labelsize': 20,
+                                     'legend.handlelength': 1,
+                                     'legend.handleheight': 1, })
+        save_path = os.path.join(trainer.params['output_dir'], 'plots')
+        colors = self.get_plot_colors()
+        Path(self.save_path).mkdir(parents=True, exist_ok=True)
+        for task in range(1, self.num_tasks+1):
+            metrics = self.metric.get_raw_history(task)
+            plt.plot(range(1, len(metrics)+1), metrics, color=colors[task-1], label=f"Task{task}")
+
+        ylabel = 'Validation Accuracy' if self.eval_type == 'classification' else 'Validation Loss'
+        xticks = self.get_plot_xticks()
+        if self.eval_type == 'classification':
+            plt.ylim((0.1, None))
+        plt.xlabel("Epochs" if self.intervals == 'epochs' else "Tasks Learned")
+        plt.ylabel(ylabel)
+        plt.xticks(xticks)
+        plt.legend(loc='lower left')
+        plt.tight_layout()
+        plt.savefig(os.path.join(save_path, "metrics.pdf"), dpi=200)
+        if trainer.logger:
+            trainer.logger.log_figure(plt, 'metrics')
+        plt.close()
+
     def on_after_fit(self, trainer):
         filepath = os.path.join(self.save_path, "metrics.npy")
         with open(filepath, 'wb') as f:
             np.save(f, self.metric.data)
+        
+        self.plot_metrics(trainer)
