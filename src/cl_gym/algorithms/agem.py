@@ -45,7 +45,7 @@ class AGEM(ContinualAlgorithm):
         if task_id > 1:
             grad_batch = flatten_grads(self.backbone).detach().clone()
             inp_ref, targ_ref, task_ids_ref = self.sample_batch_from_memory()
-            loss = criterion(self.backbone(inp_ref, task_ids_ref), targ_ref)
+            loss = criterion(self.backbone(inp_ref, task_ids_ref), targ_ref.reshape(len(targ_ref)))
             loss.backward()
             grad_ref = flatten_grads(self.backbone).detach().clone()
             if self.__is_violating_direction_constraint(grad_ref, grad_batch):
