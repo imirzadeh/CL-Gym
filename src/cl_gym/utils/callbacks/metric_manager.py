@@ -114,11 +114,21 @@ class MetricManager(ContinualCallback):
         if self.intervals == 'tasks':
             return range(1, self.num_tasks+1)
         else:
-            return list(range(1, (self.num_tasks+1)*self.epochs_per_task, self.epochs_per_task))
+            return list(range(1, (self.num_tasks+1)*self.epochs_per_task, self.epochs_per_task))[:-1]\
+                   + [self.num_tasks*self.epochs_per_task]
     
+    def get_metric_boundaries(self, task):
+        if self.intervals == 'tasks':
+            return task, self.num_tasks+1
+        else:
+            task_start = (task-1)*self.epochs_per_task+1
+            task_end = self.num_tasks*self.epochs_per_task+1
+            return task_start, task_end
+            
     def plot_metrics(self, trainer):
         plt.close('all')
         rc('text', usetex=True)
+        sns.set_style('whitegrid')
         sns.set_context("paper", rc={"lines.linewidth": 3.5,
                                      'xtick.labelsize': 20,
                                      'ytick.labelsize': 20,
@@ -131,13 +141,14 @@ class MetricManager(ContinualCallback):
         colors = self.get_plot_colors()
         Path(self.save_path).mkdir(parents=True, exist_ok=True)
         for task in range(1, self.num_tasks+1):
-            metrics = self.metric.get_raw_history(task)
-            plt.plot(range(1, len(metrics)+1), metrics, color=colors[task-1], label=f"Task{task}")
+            task_start, task_end = self.get_metric_boundaries(task)
+            metrics = self.metric.get_raw_history(task)[task_start-1:]
+            plt.plot(range(task_start, task_end), metrics, color=colors[task-1], label=f"Task{task}")
 
         ylabel = 'Validation Accuracy' if self.eval_type == 'classification' else 'Validation Loss'
         xticks = self.get_plot_xticks()
-        if self.eval_type == 'classification':
-            plt.ylim((0.1, None))
+        # if self.eval_type == 'classification':
+        #     plt.ylim((0.1, None))
         plt.xlabel("Epochs" if self.intervals == 'epochs' else "Tasks Learned")
         plt.ylabel(ylabel)
         plt.xticks(xticks)
@@ -152,5 +163,4 @@ class MetricManager(ContinualCallback):
         filepath = os.path.join(self.save_path, "metrics.npy")
         with open(filepath, 'wb') as f:
             np.save(f, self.metric.data)
-        
         self.plot_metrics(trainer)
