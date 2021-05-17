@@ -17,7 +17,7 @@ class SuperMaskFinder(ContinualCallback):
             device = trainer.params['device']
             batch_size = trainer.params['per_task_subset_examples']
             benchmark = trainer.algorithm.benchmark
-            train_loader, test_loader = benchmark.load_subset(task, batch_size=batch_size, shuffle=False,
+            train_loader, test_loader = benchmark.load(task, batch_size=batch_size, shuffle=False,
                                                              pin_memory=True if 'cuda' in str(device) else False)
             self.train_loaders[task], self.test_loaders[task] = train_loader, test_loader
     
