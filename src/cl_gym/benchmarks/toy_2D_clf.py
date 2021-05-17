@@ -4,7 +4,7 @@ from sklearn.datasets import make_blobs
 from torch.utils.data import DataLoader, Dataset, Subset, ConcatDataset
 from cl_gym.benchmarks import Benchmark
 
-DEFAULT_TOY_DATASET_SIZE = 200
+DEFAULT_TOY_DATASET_SIZE = 100
 DEFAULT_CLUSTER_STD = 0.3
 SMALL_COORD = 0.5
 LARGE_COORD = 2.0
