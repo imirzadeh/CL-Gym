@@ -71,6 +71,7 @@ mnist_params = {
     'learning_rate_lower_bound': 0.0005,
     'criterion': torch.nn.CrossEntropyLoss(),
     'device': torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
+    'num_dataloader_workers': os.cpu_count() // 2,
 }
 
 
