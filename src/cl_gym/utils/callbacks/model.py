@@ -48,3 +48,21 @@ class ModelCheckpoint(ContinualCallback):
             self.__save_model(trainer)
 
 
+class BackboneFreeze(ContinualCallback):
+    def __init__(self):
+        super(BackboneFreeze, self).__init__()
+    
+    def _freeze_module(self, module):
+        for param in module.parameters():
+            param.requires_grad = False
+    
+    def on_after_training_task(self, trainer):
+        if trainer.current_task >= 1:
+            backbone = trainer.algorithm.backbone
+            self._freeze_module(backbone.block_1)
+            # self._freeze_module(backbone.block_2)
+
+
+        
+    
+        
