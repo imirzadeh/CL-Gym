@@ -6,13 +6,20 @@ from cl_gym.utils.callbacks import ContinualCallback
 
 
 class SuperMaskFinder(ContinualCallback):
-    def __init__(self):
+    def __init__(self, intervals):
         super(SuperMaskFinder, self).__init__()
+        self.intervals = intervals
         self.train_loaders, self.test_loaders = {}, {}
         self.params = None
-    
+        self.save_path, self.plot_path = None, None
+        
     def on_before_fit(self, trainer):
         self.params = trainer.params
+        self.save_path = os.path.join(trainer.params['output_dir'], 'metrics')
+        self.plot_path = os.path.join(trainer.params['output_dir'], 'plots')
+        Path(self.save_path).mkdir(parents=True, exist_ok=True)
+        Path(self.plot_path).mkdir(parents=True, exist_ok=True)
+
         for task in range(1, trainer.params['num_tasks'] + 1):
             device = trainer.params['device']
             batch_size = trainer.params['batch_size_train']
@@ -76,11 +83,19 @@ class SuperMaskFinder(ContinualCallback):
         avg_acc = 100.0 * float(correct) / total
         test_loss /= total
         print(f"SuperMask Net Metrics [Task {target_task}]>> loss = {test_loss}, acc={avg_acc}")
-
+        return {"loss": test_loss, 'accuracy': avg_acc}
     
+    def train_and_eval(self, trainer):
+        for task in range(1, trainer.current_task + 1):
+            supermask_net = self._train_supermask_net(task, trainer)
+            metrics = self._eval_supermask_net(supermask_net, task, trainer)
+            step = trainer.current_task if self.intervals == 'tasks' else trainer.current_epoch
+            self.log_metric(trainer, f'sup_acc_{task}', round(metrics['accuracy'], 2), step)
+
     def on_after_training_task(self, trainer):
-        if trainer.current_task <= 1:
-            return
-        else:
-            supermask_net = self._train_supermask_net(1, trainer)
-            self._eval_supermask_net(supermask_net, 1, trainer)
+        if self.intervals == 'tasks':
+            self.train_and_eval(trainer)
+        
+    def on_after_training_epoch(self, trainer):
+        if self.intervals == 'epochs':
+            self.train_and_eval(trainer)
