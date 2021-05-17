@@ -3,7 +3,7 @@ import ray
 import torch
 from ray import tune
 
-toy_reg_params = {
+toy_reg_params_tune = {
     # benchmark
     'num_tasks': 3,
     'batch_size_train': tune.choice([8, 16, 32, 64]),
@@ -40,22 +40,58 @@ toy_reg_params = {
     
 }
 
+toy_reg_params = {
+    # benchmark
+    'num_tasks': 3,
+    'batch_size_train': 32,#tune.choice([8, 16, 32, 64]),
+    'batch_size_memory': 32,
+    'batch_size_validation': 128,
+    'per_task_memory_examples': 10,
+    'per_task_joint_examples': 10,
+    'per_task_subset_examples': 70,
+    
+    # backbone
+    'input_dim': 1,
+    'hidden_1_dim': 20,
+    'hidden_2_dim': 20,
+    'hidden_3_dim': 10,
+    'hidden_4_dim': 10,
+    'output_dim': 1,
+    'dropout_prob': 0.5,
+    'activation': 'Tanh',
+    'final_layer_act': True,
+    
+    # algorithm
+    'optimizer': 'SGD',
+    'momentum': 0.8,
+    'epochs_per_task': 250,
+    'learning_rate': 0.01,
+    'learning_rate_decay': 1.0,
+    'learning_rate_lower_bound': 0.0005,
+    'criterion': torch.nn.MSELoss(),  # torch.nn.CrossEntropyLoss(),
+    'device': torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
+    'mcsgd_init_pos': 0.9,
+    'mscgd_line_samples': 20,
+    'grad_clip_val': 1.0,
+    'orm_orthogonal_scale': 2.0
+}
 
 toy_clf_params = {
     # benchmark
-    'num_tasks': 4,
+    'num_tasks': 2,
     'batch_size_train': 32,  # tune.grid_search([8, 16]),
     'batch_size_memory': 32,
     'batch_size_validation': 128,
     'per_task_memory_examples': 10,
-    'per_task_joint_examples': 70,
+    'per_task_joint_examples': 64,
+    'per_task_subset_examples': 32,
     
     # backbone
     'input_dim': 2,
-    'hidden_1_dim': 10,
-    'hidden_2_dim': 10,
-    'hidden_3_dim': 10,
-    'hidden_4_dim': 10,
+    'hidden_1_dim': 16,
+    'hidden_2_dim': 16,
+    'hidden_3_dim': 32,
+    'hidden_4_dim': 32,
     'output_dim': 2,
     'dropout_prob': 0.00,
     'activation': 'ReLU',
@@ -65,8 +101,8 @@ toy_clf_params = {
     'optimizer': 'SGD',  # tune.choice(['SGD', 'Adam']),
     'momentum': 0.8,
     'epochs_per_task': 10,
-    'learning_rate': 0.05,  # tu:e.loguniform(0.001, 0.05),
-    'learning_rate_decay': 0.94,  # tune.uniform(0.7, 0.99),
+    'learning_rate': 0.15,  # tu:e.loguniform(0.001, 0.05),
+    'learning_rate_decay': 1.0,  # tune.uniform(0.7, 0.99),
     'learning_rate_lower_bound': 0.0005,
     'criterion':  torch.nn.CrossEntropyLoss(),
     'device': torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
