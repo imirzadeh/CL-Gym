@@ -17,8 +17,11 @@ class SuperMaskFinder(ContinualCallback):
             device = trainer.params['device']
             batch_size = trainer.params['batch_size_train']
             benchmark = trainer.algorithm.benchmark
-            train_loader, test_loader = benchmark.load(task, batch_size=batch_size, shuffle=False,
-                                                             pin_memory=True if 'cuda' in str(device) else False)
+            num_workers = min(4, int(os.cpu_count()//4))
+            train_loader, test_loader = benchmark.load(task, batch_size=batch_size,
+                                                       num_workers=num_workers,
+                                                       shuffle=False,
+                                                       pin_memory=True if 'cuda' in str(device) else False)
             self.train_loaders[task], self.test_loaders[task] = train_loader, test_loader
     
     def __build_supermask_net(self, trainer):
