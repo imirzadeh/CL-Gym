@@ -71,7 +71,8 @@ class SuperMaskMLP(nn.Module):
 
     def forward(self, x, task_id=None):
         x = x.view(x.shape[0], -1)
-        x = torch.cat((x, torch.ones(x.shape[0], 1)), dim=1)
+        ones = torch.ones(x.shape[0], 1).to(x.device)
+        x = torch.cat((x, ones), dim=1)
         x = self.w1(x)
         x = F.relu(x)
         x = self.w2(x)
@@ -100,7 +101,8 @@ class MLP(nn.Module):
     def forward(self, x, task_id=None):
         x = x.view(x.shape[0], -1)
         # manually add bias since SuerMask doesn't support bias natively?
-        x = torch.cat((x, torch.ones(x.shape[0], 1)), dim=1)
+        ones = torch.ones(x.shape[0], 1).to(x.device)
+        x = torch.cat((x, ones), dim=1)
         x = self.w1(x)
         x = F.relu(x)
         x = self.w2(x)
