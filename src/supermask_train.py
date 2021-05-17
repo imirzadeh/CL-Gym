@@ -51,13 +51,13 @@ mnist_params = {
     'batch_size_validation': 128,
     'per_task_memory_examples': 10,
     'per_task_joint_examples': 64,
-    'per_task_subset_examples': 32,
+    'per_task_subset_examples': 10000,
     'per_task_rotation': 22.5,
     
     # backbone
     'input_dim': 784,
-    'hidden_1_dim': 256,
-    'hidden_2_dim': 256,
+    'hidden_1_dim': 100,
+    'hidden_2_dim': 100,
     'output_dim': 10,
     'dropout_prob': 0.00,
     'activation': 'ReLU',
@@ -65,13 +65,17 @@ mnist_params = {
     # algorithm
     'optimizer': 'SGD',  # tune.choice(['SGD', 'Adam']),
     'momentum': 0.8,
-    'epochs_per_task': 10,
+    'epochs_per_task': 5,
     'learning_rate': 0.1,  # tu:e.loguniform(0.001, 0.05),
     'learning_rate_decay': 1.0,  # tune.uniform(0.7, 0.99),
     'learning_rate_lower_bound': 0.0005,
     'criterion': torch.nn.CrossEntropyLoss(),
     'device': torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
-    'num_dataloader_workers': os.cpu_count() // 2,
+    'num_dataloader_workers': os.cpu_count() // 4,
+    'eval_interval': 'epochs',
+    
+    # supermask params
+    'supermask_train_epochs': 2,
 }
 
 
@@ -99,9 +103,9 @@ def run(params):
     algorithm = cl.algorithms.ContinualAlgorithm(backbone_main, benchmark, params)
     metric_manager_callback = cl.callbacks.MetricManager(num_tasks=params['num_tasks'],
                                                          epochs_per_task=params['epochs_per_task'],
-                                                         intervals='epochs',
+                                                         intervals=params.get('eval_interval', 'epochs'),
                                                          tuner=False)
-    supermask_finder_callback = cl.callbacks.SuperMaskFinder()
+    supermask_finder_callback = cl.callbacks.SuperMaskFinder(intervals=params.get('eval_interval', 'epochs'))
     trainer_callbacks = [metric_manager_callback, supermask_finder_callback]
     trainer = cl.trainer.ContinualTrainer(algorithm, params, logger=logger, callbacks=trainer_callbacks)
     trainer.run()
