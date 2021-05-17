@@ -87,7 +87,7 @@ def run(params):
     Path(params['output_dir']).mkdir(parents=True, exist_ok=True)
     Path(os.path.join(params['output_dir'], 'plots')).mkdir(parents=True, exist_ok=True)
     
-    logger = cl.utils.loggers.CometLogger(project_name='debug-2', workspace='cl-boundary', trial_name=trial_id)
+    logger = cl.utils.loggers.CometLogger(project_name='supermask-rotmnist-intro', workspace='cl-boundary', trial_name=trial_id)
     # benchmark = cl.benchmarks.Toy2DClassification(num_tasks=params['num_tasks'],
     #                                               per_task_memory_examples=params['per_task_memory_examples'],
     #                                               per_task_joint_examples=params['per_task_joint_examples'],
