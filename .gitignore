@@ -505,6 +505,9 @@ __MACOSX
 
 src/data
 src/data/
+src/cl_gym/data/*
+src/cl_gym/data/
+cl_gym/data/
 src/docs
 src/docs/
 src/outputs
@@ -596,3 +599,5 @@ src/test
 
 # PDF
 *.pdf
+
+
