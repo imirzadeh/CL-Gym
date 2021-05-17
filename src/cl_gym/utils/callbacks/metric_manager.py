@@ -33,8 +33,10 @@ class MetricManager(ContinualCallback):
     
     def on_before_fit(self, trainer):
         self.save_path = os.path.join(trainer.params['output_dir'], 'metrics')
+        self.plot_path = os.path.join(trainer.params['output_dir'], 'plots')
         Path(self.save_path).mkdir(parents=True, exist_ok=True)
-        
+        Path(self.plot_path).mkdir(parents=True, exist_ok=True)
+
         benchmark_name = str(trainer.algorithm.benchmark).lower()
         if 'reg' in benchmark_name:
             self.eval_type = 'regression'
