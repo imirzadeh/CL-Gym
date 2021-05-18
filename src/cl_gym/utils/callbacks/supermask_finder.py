@@ -135,7 +135,7 @@ class SuperMaskFinder(ContinualCallback):
                                      'legend.handleheight': 1, })
         
         for layer in [1, 2, 3]:
-            sns.heatmap(data, vmin=0, vmax=1.0, cmap='plasma', square=False)
+            sns.heatmap(data[str(layer)].T, vmin=0, vmax=1.0, cmap='plasma', square=False)
             trainer.logger.log_figure(plt, f"masks_task_{task}_layer_{layer}")
             plt.close('all')
             
