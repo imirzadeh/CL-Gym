@@ -36,7 +36,7 @@ class SuperMaskFinder(ContinualCallback):
             self.train_loaders[task], self.test_loaders[task] = train_loader, test_loader
     
     def __build_supermask_net(self, trainer):
-        supermask_sparsity = trainer.params.get("supermask_sparsity", 0.5)
+        supermask_sparsity = trainer.params.get("supermask_sparsity", 0.2)
 
         main_net = trainer.algorithm.backbone
         supermask_net = SuperMaskMLP(self.params['input_dim'],
