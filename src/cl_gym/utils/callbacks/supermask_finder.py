@@ -1,7 +1,8 @@
 import os
-import torch
-from pathlib import Path
 import copy
+import torch
+import numpy as np
+from pathlib import Path
 from cl_gym.backbones.supermask import SuperMaskMLP
 from cl_gym.utils.callbacks import ContinualCallback
 
@@ -120,6 +121,5 @@ class SuperMaskFinder(ContinualCallback):
     
     def on_after_fit(self, trainer):
         for task in range(1, trainer.current_task):
-            print(f'------------------------- {task} -----------------------')
-            print(self.mask_history[task])
-            print('\n')
+            filename = os.path.join(self.save_path, f"masks_task_{task}.npz")
+            np.savez(filename, **self.mask_history[task])
