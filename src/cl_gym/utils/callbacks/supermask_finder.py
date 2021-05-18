@@ -94,6 +94,9 @@ class SuperMaskFinder(ContinualCallback):
                 self.task_masks[task] = copy.deepcopy(supermask_net)
             else:
                 supermask_net = self.task_masks[task]
+                for layer in [1, 2, 3]:
+                    supermask_net.replace_weights(layer, trainer.algorithm.backbone.get_layer_weights(layer))
+
             metrics = self._eval_supermask_net(supermask_net, task, trainer)
             step = trainer.current_task if self.intervals == 'tasks' else trainer.current_epoch
             self.log_metric(trainer, f'sup_acc_{task}', round(metrics['accuracy'], 2), step)
