@@ -107,7 +107,9 @@ def run(params):
                                                          tuner=False)
     supermask_finder_callback = cl.callbacks.SuperMaskFinder(intervals=params.get('eval_interval', 'epochs'))
     checkpoint_callback = cl.callbacks.ModelCheckpoint(interval='task')
-    trainer_callbacks = [metric_manager_callback, supermask_finder_callback, checkpoint_callback]
+    experiment_manager_callback = cl.callbacks.ExperimentManager()
+    trainer_callbacks = [metric_manager_callback, supermask_finder_callback,
+                         checkpoint_callback, experiment_manager_callback]
     trainer = cl.trainer.ContinualTrainer(algorithm, params, logger=logger, callbacks=trainer_callbacks)
     trainer.run()
 
