@@ -5,6 +5,9 @@ import numpy as np
 from pathlib import Path
 from cl_gym.backbones.supermask import SuperMaskMLP
 from cl_gym.utils.callbacks import ContinualCallback
+import matplotlib
+import seaborn as sns
+from matplotlib import pyplot as plt
 
 
 class SuperMaskFinder(ContinualCallback):
@@ -119,7 +122,26 @@ class SuperMaskFinder(ContinualCallback):
         if self.intervals == 'epochs':
             self.train_and_eval(trainer)
     
+    def _plot_masks(self, task, trainer):
+        plt.close('all')
+        data = self.mask_history[task]
+        sns.set_context("paper", rc={"lines.linewidth": 4.5,
+                                     'xtick.labelsize': 12,
+                                     'ytick.labelsize': 12,
+                                     'lines.markersize': 8,
+                                     'legend.fontsize': 19,
+                                     'axes.labelsize': 23,
+                                     'legend.handlelength': 0.7,
+                                     'legend.handleheight': 1, })
+        
+        for layer in [1, 2, 3]:
+            sns.heatmap(data, vmin=0, vmax=1.0, cmap='plasma', square=False)
+            trainer.logger.log_figure(plt, f"masks_task_{task}_layer_{layer}")
+            plt.close('all')
+            
+        
     def on_after_fit(self, trainer):
         for task in range(1, trainer.current_task):
             filename = os.path.join(self.save_path, f"masks_task_{task}.npz")
             np.savez(filename, **self.mask_history[task])
+            self._plot_masks(task, trainer)
