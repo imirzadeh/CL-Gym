@@ -1,6 +1,7 @@
 import os
 import torch
 from pathlib import Path
+import copy
 from cl_gym.backbones.supermask import SuperMaskMLP
 from cl_gym.utils.callbacks import ContinualCallback
 
@@ -12,6 +13,7 @@ class SuperMaskFinder(ContinualCallback):
         self.train_loaders, self.test_loaders = {}, {}
         self.params = None
         self.save_path, self.plot_path = None, None
+        self.task_masks = {}
         
     def on_before_fit(self, trainer):
         self.params = trainer.params
@@ -87,7 +89,11 @@ class SuperMaskFinder(ContinualCallback):
     
     def train_and_eval(self, trainer):
         for task in range(1, trainer.current_task + 1):
-            supermask_net = self._train_supermask_net(task, trainer)
+            if task == trainer.current_task:
+                supermask_net = self._train_supermask_net(task, trainer)
+                self.task_masks[task] = copy.deepcopy(supermask_net)
+            else:
+                supermask_net = self.task_masks[task]
             metrics = self._eval_supermask_net(supermask_net, task, trainer)
             step = trainer.current_task if self.intervals == 'tasks' else trainer.current_epoch
             self.log_metric(trainer, f'sup_acc_{task}', round(metrics['accuracy'], 2), step)
