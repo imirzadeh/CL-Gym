@@ -11,17 +11,14 @@ import torch.autograd as autograd
 class GetSubnet(autograd.Function):
     @staticmethod
     def forward(ctx, scores, k):
-        # Get the supermask by sorting the scores and using the top k%
-        # out = scores.clone()
-        out = (scores >= 0.0).float()
-        # _, idx = scores.flatten().sort()
-        # j = int((1 - k) * scores.numel())
-        #
-        # # flat_out and out access the same memory.
-        # flat_out = out.flatten()
-        # flat_out[idx[:j]] = 0
-        # flat_out[idx[j:]] = 1
-
+        # out = (scores >= 0.0).float()
+        out = scores.clone()
+        _, idx = scores.flatten().sort()
+        j = int((1 - k) * scores.numel())
+        # flat_out and out access the same memory.
+        flat_out = out.flatten()
+        flat_out[idx[:j]] = 0
+        flat_out[idx[j:]] = 1
         return out
 
     @staticmethod
