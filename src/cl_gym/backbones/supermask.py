@@ -45,7 +45,12 @@ class SupermaskLinear(nn.Linear):
         self.weight.requires_grad = False
         
         self.sparsity = sparsity
-        
+    
+    @torch.no_grad()
+    def get_supermask(self):
+        subnet = GetSubnet.apply(self.scores, self.sparsity)
+        return subnet
+
     def forward(self, x):
         subnet = GetSubnet.apply(self.scores, self.sparsity)
         w = self.weight * subnet

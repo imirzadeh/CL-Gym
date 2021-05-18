@@ -14,6 +14,7 @@ class SuperMaskFinder(ContinualCallback):
         self.params = None
         self.save_path, self.plot_path = None, None
         self.task_masks = {}
+        self.mask_history = {}
         
     def on_before_fit(self, trainer):
         self.params = trainer.params
@@ -100,11 +101,25 @@ class SuperMaskFinder(ContinualCallback):
             metrics = self._eval_supermask_net(supermask_net, task, trainer)
             step = trainer.current_task if self.intervals == 'tasks' else trainer.current_epoch
             self.log_metric(trainer, f'sup_acc_{task}', round(metrics['accuracy'], 2), step)
+    
+    def _extract_masks(self, supermask_net):
+        masks = {1: supermask_net.w1.get_supermask().clone().numpy(),
+                 2: supermask_net.w2.get_supermask().clone().numpy(),
+                 3: supermask_net.w3.get_supermask().clone().numpy()}
+        return masks
 
     def on_after_training_task(self, trainer):
         if self.intervals == 'tasks':
             self.train_and_eval(trainer)
+        task_masks = self._extract_masks(self.task_masks[trainer.current_task])
+        self.mask_history[trainer.current_task] = task_masks
         
     def on_after_training_epoch(self, trainer):
         if self.intervals == 'epochs':
             self.train_and_eval(trainer)
+    
+    def on_after_fit(self, trainer):
+        for task in range(1, trainer.current_task):
+            print(f'------------------------- {task} -----------------------')
+            print(self.mask_history[task])
+            print('\n')
