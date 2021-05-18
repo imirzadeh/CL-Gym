@@ -17,6 +17,7 @@ cliff==3.7.0
 cmaes==0.8.2
 cmd2==1.5.0
 colorama==0.4.4
+colorful==0.5.4
 colorlog==5.0.1
 comet-ml==3.9.0
 configobj==5.0.6
