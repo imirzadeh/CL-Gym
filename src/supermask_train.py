@@ -45,7 +45,7 @@ clf_params = {
 
 mnist_params = {
     # benchmark
-    'num_tasks': 5,
+    'num_tasks': 3,
     'batch_size_train': 64,  # tune.grid_search([8, 16]),
     'batch_size_memory': 64,
     'batch_size_validation': 128,
