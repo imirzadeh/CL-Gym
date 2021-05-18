@@ -104,9 +104,9 @@ class SuperMaskFinder(ContinualCallback):
             self.log_metric(trainer, f'sup_acc_{task}', round(metrics['accuracy'], 2), step)
     
     def _extract_masks(self, supermask_net):
-        masks = {1: supermask_net.w1.get_supermask().clone().cpu().numpy(),
-                 2: supermask_net.w2.get_supermask().clone().cpu().numpy(),
-                 3: supermask_net.w3.get_supermask().clone().cpu().numpy()}
+        masks = {'1': supermask_net.w1.get_supermask().clone().cpu().numpy(),
+                 '2': supermask_net.w2.get_supermask().clone().cpu().numpy(),
+                 '3': supermask_net.w3.get_supermask().clone().cpu().numpy()}
         return masks
 
     def on_after_training_task(self, trainer):
