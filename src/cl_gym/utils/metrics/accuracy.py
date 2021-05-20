@@ -4,17 +4,45 @@ from cl_gym.utils.metrics import ContinualMetric
 
 
 class AverageMetric(ContinualMetric):
-    def __init__(self,
-                 num_tasks: int,
-                 epochs_per_task: Optional[int] = 1,
-                 validations_steps_per_epoch: Optional[int] = 1):
-        super().__init__(num_tasks, epochs_per_task, validations_steps_per_epoch)
+    def __init__(self, num_tasks: int, epochs_per_task: Optional[int] = 1):
+        super().__init__(num_tasks, epochs_per_task)
     
-    def compute(self, current_task: int):
+    def compute(self, current_task: int) -> float:
         if current_task < 1:
             raise ValueError("Tasks are 1-based. i.e., the first task's id is 1, not 0.")
+        return float(np.mean(self.data[current_task, 1:current_task+1, -1]))
         
-        return np.mean(self.data[current_task-1, :current_task, -1, -1])
-        
-    def compute_final(self):
-        return np.mean(self.data[-1, :, -1, -1])
+    def compute_final(self) -> float:
+        return self.compute(self.num_tasks)
+
+
+# if __name__ == "__main__":
+#     avg_acc = AverageMetric(2, 2)
+#     # init
+#     avg_acc.update(0, 1, 50, 1)
+#     avg_acc.update(0, 1, 50, 2)
+#     avg_acc.update(0, 2, 60, 1)
+#     avg_acc.update(0, 2, 60, 2)
+#
+#     # task 1
+#     avg_acc.update(1, 1, 90, 1)
+#     avg_acc.update(1, 1, 100, 2)
+#
+#     # task 2
+#     avg_acc.update(2, 1, 70, 1)
+#     avg_acc.update(2, 1, 60, 2)
+#     avg_acc.update(2, 2, 90, 1)
+#     avg_acc.update(2, 2, 100, 2)
+#
+#     print(avg_acc.data)
+#     print(avg_acc.data.shape)
+#     print(avg_acc.compute(1))
+#     print(avg_acc.compute(2))
+#     print(avg_acc.compute_final())
+#     print('t1')
+#     print(avg_acc.get_raw_history(1))
+#     print(avg_acc.get_raw_history(1, start_task=0))
+#     print('t2')
+#     print(avg_acc.get_raw_history(2, start_task=0))
+#     print(avg_acc.get_raw_history(2, start_task=1))
+#     print(avg_acc.get_raw_history(2, start_task=2))
