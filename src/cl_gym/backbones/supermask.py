@@ -1,14 +1,17 @@
-import os
 import math
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.autograd as autograd
+from cl_gym.backbones import ContinualBackbone
+from typing import Union, List, Optional
 
 
 class GetSubnet(autograd.Function):
+    """
+    source: https://github.com/allenai/hidden-networks/
+    """
     @staticmethod
     def forward(ctx, scores, k):
         # out = (scores >= 0.0).float()
@@ -31,17 +34,20 @@ class SupermaskLinear(nn.Linear):
     def __init__(self, sparsity, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # initialize the scores
+        # initialize the scores / weights
         self.scores = nn.Parameter(torch.Tensor(self.weight.size()))
         nn.init.kaiming_uniform_(self.scores, a=math.sqrt(5))
-
-        # NOTE: initialize the weights like this.
         nn.init.kaiming_normal_(self.weight, mode="fan_in", nonlinearity="relu")
 
         # NOTE: turn the gradient on the weights off
         self.weight.requires_grad = False
         
         self.sparsity = sparsity
+    
+    @torch.no_grad()
+    def set_weight(self, weight: torch.Tensor):
+        self.weight.data.copy_(weight)
+        self.weight.requires_grad = False
     
     @torch.no_grad()
     def get_supermask(self):
@@ -55,71 +61,47 @@ class SupermaskLinear(nn.Linear):
 
 
 class SuperMaskMLP(nn.Module):
-    def __init__(self, input_dim, hidden_dim_1, hidden_dim_2, output_dim, sparsity):
+    def __init__(self, sparsity: Optional[float] = 0.5):
         super(SuperMaskMLP, self).__init__()
-        self.input_dim = input_dim
-        self.hidden_dim_1 = hidden_dim_1
-        self.hidden_dim_2 = hidden_dim_2
-        self.output_dim = output_dim
-        
-        self.w1 = SupermaskLinear(sparsity, in_features=self.input_dim+1, out_features=self.hidden_dim_1, bias=True)
-        self.w2 = SupermaskLinear(sparsity, in_features=self.hidden_dim_1, out_features=self.hidden_dim_2, bias=True)
-        self.w3 = SupermaskLinear(sparsity, in_features=self.hidden_dim_2, out_features=self.output_dim, bias=True)
-    
-    def replace_weights(self, layer, weight):
-        assert 1 <= layer <= 3
-        layer_weights = {1: self.w1, 2: self.w2, 3: self.w3}
-        layer_weights[layer].weight.data.copy_(weight)
-        layer_weights[layer].weight.requires_grad = False
+        self.sparsity: float = sparsity
+        self.bias_dims: List[int] = []
+        self.blocks: Union[nn.ModuleList, List[SupermaskLinear]] = []
 
-    def forward(self, x, task_id=None):
+    def _create_block(self, params: nn.Linear):
+        inp_dim, out_dim = params.in_features, params.out_features
+        weight = params.weight.data
+        bias = params.bias.data if params.bias is not None else None
+        bias_dim = 0 if bias is None else 1
+        block = SupermaskLinear(self.sparsity, in_features=inp_dim+bias_dim, out_features=out_dim, bias=False)
+        if bias is not None:
+            weight = torch.cat((weight, bias.view(-1, 1)), dim=1)
+            block.set_weight(weight)
+        return block, bias_dim
+        
+    def from_backbone(self, backbone: ContinualBackbone):
+        self.blocks, self.bias_dims = [], []
+        for block_id in range(3):
+            block, bias_dim = self._create_block(backbone.blocks[block_id].layers[0])
+            self.blocks.append(block)
+            self.bias_dims.append(bias_dim)
+        
+    def forward(self, x, task_id: Optional[int] = None):
         x = x.view(x.shape[0], -1)
-        ones = torch.ones(x.shape[0], 1).to(x.device)
-        x = torch.cat((x, ones), dim=1)
-        x = self.w1(x)
-        x = F.relu(x)
-        x = self.w2(x)
-        x = F.relu(x)
-        x = self.w3(x)
+        for i in range(3):
+            if self.bias_dims[i]:
+                ones = torch.ones(x.shape[0], 1).to(x.device)
+                x = torch.cat((x, ones), dim=1)
+            x = self.blocks[i](x)
+            # last layer doesn't have activation
+            if i != 2:
+                x = F.relu(x)
         return x
 
 
-class MLP(nn.Module):
-    def __init__(self, input_dim, hidden_dim_1, hidden_dim_2, output_dim):
-        super(MLP, self).__init__()
-        self.input_dim = input_dim
-        self.hidden_dim_1 = hidden_dim_1
-        self.hidden_dim_2 = hidden_dim_2
-        self.output_dim = output_dim
-
-        self.w1 = nn.Linear(self.input_dim+1, self.hidden_dim_1, bias=True)
-        self.w2 = nn.Linear(self.hidden_dim_1, self.hidden_dim_2, bias=True)
-        self.w3 = nn.Linear(self.hidden_dim_2, self.output_dim, bias=False)
-    
-    @torch.no_grad()
-    def get_layer_weights(self, layer):
-        layer_weights = {1: self.w1, 2: self.w2, 3: self.w3}
-        return layer_weights[layer].weight.data.detach().clone()
-        
-    def forward(self, x, task_id=None):
-        x = x.view(x.shape[0], -1)
-        # manually add bias since SuerMask doesn't support bias natively?
-        ones = torch.ones(x.shape[0], 1).to(x.device)
-        x = torch.cat((x, ones), dim=1)
-        x = self.w1(x)
-        x = F.relu(x)
-        x = self.w2(x)
-        x = F.relu(x)
-        x = self.w3(x)
-        return x
-
-
-# if __name__ == "__main__":
-#     net1 = SuperMaskMLP(2, 5, 5, 2, 0.5)
-#     net2 = MLP(2, 5, 5, 2)
-# #
-#     print(net1.w1.weight)
-#     print(net2.w1.weight)
-#     print('----'*10)
-#     net1.replace_weights(1, net2.get_layer_weights(1))
-#     print(net1.w1.weight)
+if __name__ == "__main__":
+    from cl_gym.backbones import MLP2Layers
+    main_net = MLP2Layers(input_dim=2, hidden_dim_1=10, hidden_dim_2=10, output_dim=2, bias=False)
+    inp = torch.randn(32, 2)
+    supermask_net = SuperMaskMLP(sparsity=0.4)
+    supermask_net.from_backbone(main_net)
+    print(supermask_net(inp))

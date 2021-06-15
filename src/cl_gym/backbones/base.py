@@ -1,24 +1,41 @@
 import torch
 import torch.nn as nn
+from typing import Iterable, Optional, Union, Iterable, Dict
 
 
 class ContinualBackbone(nn.Module):
-    def __init__(self, multi_head=False, num_classes_per_head=None):
+    def __init__(self,
+                 multi_head: bool = False,
+                 num_classes_per_head: Optional[int] = None):
+        
+        self.multi_head: bool = multi_head
+        self.num_classes_per_head: int = num_classes_per_head
+        self.blocks: Union[Iterable[nn.Module], nn.ModuleList] = []
         super(ContinualBackbone, self).__init__()
-        self.multi_head = multi_head
-        self.num_classes_per_head = num_classes_per_head
-
-
-
+    
+    def get_block_params(self, block_id: int) -> Dict[str, torch.Tensor]:
+        raise NotImplementedError
+    
+    @torch.no_grad()
+    def get_block_outputs(self, inp: torch.Tensor, block_id: int, pre_act: bool = False) -> torch.Tensor:
+        raise NotImplementedError
+    
+    def get_block_grads(self, block_id: int) -> torch.Tensor:
+        raise NotImplementedError
+     
+    def select_output_head(self, output, head_id: int):
+        offset1 = int((head_id - 1) * self.num_classes_per_head)
+        offset2 = int(head_id * self.num_classes_per_head)
+        output[:, :offset1].data.fill_(-2e10)
+        output[:, offset2:].data.fill_(-2e10)
+        return output
+    
+    def forward(self, inp: torch.Tensor, head_id: Optional[int] = None) -> torch.Tensor:
+        out = inp
+        for block in self.blocks:
+            out = block(out)
+        if self.multi_head and head_id:
+            out = self.select_output_head(out, head_id)
+        return out
+        
 # if __name__ == "__main__":
-#     data = torch.randn((2, 784))
-#     net = MLP2Layers(input_dim=784, output_dim=4, hidden_dim_1=5, hidden_dim_2=5, dropout_prob=0.25, num_classes_per_head=2, multi_head=True)
-#     net.train()
-#     # print(net(data, 1))
-#     # print(net(data, 2))
-#     # net.eval()
-#     print(net.record_activations(data))
-#     print(net)
-#     # print(net.blocks.keys())
-#     for n, p in net.named_parameters():
-#         print(n)
