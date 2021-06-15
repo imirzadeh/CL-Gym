@@ -19,7 +19,7 @@ class Logger:
     def log_metric(self, key: str, value, step=None):
         raise NotImplementedError
     
-    def log_figure(self, figure, name):
+    def log_figure(self, figure, name, step=None):
         raise NotImplementedError
     
     def log_text(self, text):
