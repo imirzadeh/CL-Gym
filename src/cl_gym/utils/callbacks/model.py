@@ -61,8 +61,3 @@ class BackboneFreeze(ContinualCallback):
             backbone = trainer.algorithm.backbone
             self._freeze_module(backbone.block_1)
             # self._freeze_module(backbone.block_2)
-
-
-        
-    
-        
