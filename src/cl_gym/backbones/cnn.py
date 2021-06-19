@@ -30,14 +30,8 @@ class CNN1D(nn.Module):
         out = self.fc3(out)
         out = self.relu(out)
         out = self.fc4(out)
-        # print("--------- DEBUG -----")
-        # for i in range(batch_size):
-        #     print(f"Input >> {x[i]}")
-        #     print(f"Output >> {out[i]}")
-        # print("--------- DEBUG -----")
         return out
-        # print(out.shape)
-    
+
     
 # if __name__ == "__main__":
 #     inp = torch.randn((32, 128, 18))
