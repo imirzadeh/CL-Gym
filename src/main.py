@@ -24,9 +24,10 @@ def run_main(params):
     
     backbone = cl.backbones.ResNet18Small(100)
     
-    algorithm = cl.algorithms.ContinualAlgorithm(backbone, benchmark, params)
+    # algorithm = cl.algorithms.ContinualAlgorithm(backbone, benchmark, params)
     # algorithm = cl.algorithms.OGD(backbone, benchmark, params)
     # algorithm = cl.algorithms.ORM(backbone, benchmark, params)
+    algorithm = cl.algorithms.AGEM(backbone, benchmark, params)
     
     metric_manager_callback = cl.callbacks.MetricCollector(num_tasks=params['num_tasks'],
                                                          epochs_per_task=params['epochs_per_task'])
