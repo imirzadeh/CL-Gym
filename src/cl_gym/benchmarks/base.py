@@ -2,7 +2,7 @@ import torch
 import torchvision
 import numpy as np
 from numpy.random import randint
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict
 from torch.utils.data import DataLoader, Dataset, Subset, ConcatDataset
 from PIL import Image
 
@@ -88,20 +88,35 @@ class Benchmark:
         for task in range(1, self.num_tasks+1):
             self.seq_indices_train[task] = randint(0, len(self.trains[task]), size=self.per_task_seq_examples)
             self.seq_indices_test[task] = randint(0, len(self.tests[task]), size=min(self.per_task_seq_examples, len(self.tests[task])))
-
-    def sample_uniform_class_indices(self, dataset, start_class, end_class, num_samples):
+    
+    def _calculate_num_examples_per_class(self, start_class, end_class, num_samples):
         num_classes = end_class - start_class + 1
-        target_classes = dataset.targets.clone().detach().numpy()
         num_examples_per_class = num_samples//num_classes
+        result = [num_examples_per_class]*num_classes
+        
+        # if memory_size can't be divided by num_class classes
+        # e.g., memory_size is 32, but we have 5 classes.
+        if num_classes * num_examples_per_class < num_samples:
+            # how many more examples we need?
+            diff = num_samples - (num_classes * num_examples_per_class)
+            # add examples
+            while diff:
+                diff -= 1
+                result[randint(0, num_classes)] += 1
+        return result
+   
+    def sample_uniform_class_indices(self, dataset, start_class, end_class, num_samples):
+        target_classes = dataset.targets.clone().detach().numpy()
+        num_examples_per_class = self._calculate_num_examples_per_class(start_class, end_class, num_samples)
         class_indices = []
         # choose num_examples_per_class for each class
-        for cls_number in range(start_class, end_class+1):
+        for i, cls_number in enumerate(range(start_class, end_class+1)):
             target = (target_classes == cls_number)
             #  maybe that class doesn't exist
             num_candidate_examples = len(np.where(target == 1)[0])
             if num_candidate_examples:
                 selected_indices = np.random.choice(np.where(target == 1)[0],
-                                                    min(num_candidate_examples, num_examples_per_class),
+                                                    min(num_candidate_examples, num_examples_per_class[i]),
                                                     replace=False)
                 class_indices += list(selected_indices)
         return class_indices
