@@ -78,7 +78,7 @@ toy_reg_params = {
 
 toy_clf_params = {
     # benchmark
-    'num_tasks': 2,
+    'num_tasks': 4,
     'batch_size_train': 32,  # tune.grid_search([8, 16]),
     'batch_size_memory': 32,
     'batch_size_validation': 128,
@@ -143,4 +143,23 @@ rot_mnist_params = {
     'device': torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
     # 'grad_clip_val': 0.0,
     'orm_orthogonal_scale': tune.uniform(1, 10)
+}
+
+cifar_params = {
+    'num_tasks': 20,
+    'batch_size_train': 128,  # tune.grid_search([8, 16]),
+    'batch_size_memory': 128,
+    'batch_size_validation': 256,
+    'per_task_memory_examples': 20,
+    'per_task_joint_examples': 2000,
+    
+    # algorithm
+    'optimizer': 'SGD',  # tune.choice(['SGD', 'Adam']),
+    'momentum': 0.8,
+    'epochs_per_task': 2,
+    'learning_rate': 0.1,  # tu:e.loguniform(0.001, 0.05),
+    'learning_rate_decay': 0.9,  # tune.uniform(0.7, 0.99),
+    'learning_rate_lower_bound': 0.0005,
+    'criterion': torch.nn.CrossEntropyLoss(),
+    'device': torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
 }
