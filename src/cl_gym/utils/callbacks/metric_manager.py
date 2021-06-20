@@ -123,6 +123,8 @@ class MetricCollector(ContinualCallback):
         else:
             start, end = self.interval_calculator.get_task_range(task)
             metrics = self.meters['accuracy'].get_raw_history(task)[start-1:]
+            if self.eval_interval == 'task':
+                metrics = metrics[self.epochs_per_task-1::self.epochs_per_task]
         return range(start, end), metrics
         
     def plot_metrics(self, logger: Optional[Logger] = None):
