@@ -72,8 +72,7 @@ class ResNet(ContinualBackbone):
         
         if self.multi_head:
             out = self.select_output_head(out, head_ids)
-            print("debug net >> ", head_ids[0], out)
-            print("debug net >> ", head_ids[32], out)
+            print("debug net >> ", head_ids[0], out[:10])
         return out
 
 
