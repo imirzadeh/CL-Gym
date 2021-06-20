@@ -22,7 +22,7 @@ def run_main(params):
                                            per_task_memory_examples=params['per_task_memory_examples'],
                                            per_task_joint_examples=params['per_task_joint_examples'])
     
-    backbone = cl.backbones.ResNet18Small(100)
+    backbone = cl.backbones.ResNet18Small(multi_head=True, num_classes_per_head=5, num_classes=100)
     
     # algorithm = cl.algorithms.ContinualAlgorithm(backbone, benchmark, params)
     # algorithm = cl.algorithms.OGD(backbone, benchmark, params)
