@@ -156,9 +156,9 @@ cifar_params = {
     # algorithm
     'optimizer': 'SGD',  # tune.choice(['SGD', 'Adam']),
     'momentum': 0.8,
-    'epochs_per_task': 2,
-    'learning_rate': 0.01,  # tu:e.loguniform(0.001, 0.05),
-    'learning_rate_decay': 0.8,  # tune.uniform(0.7, 0.99),
+    'epochs_per_task': 3,
+    'learning_rate': 0.1,  # tu:e.loguniform(0.001, 0.05),
+    'learning_rate_decay': 0.7,  # tune.uniform(0.7, 0.99),
     'learning_rate_lower_bound': 0.0005,
     'criterion': torch.nn.CrossEntropyLoss(),
     'device': torch.device('cuda' if torch.cuda.is_available() else 'cpu'),

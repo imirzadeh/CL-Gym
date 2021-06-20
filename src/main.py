@@ -31,7 +31,8 @@ def run_main(params):
     algorithm = cl.algorithms.ERRingBuffer(backbone, benchmark, params)
     
     metric_manager_callback = cl.callbacks.MetricCollector(num_tasks=params['num_tasks'],
-                                                         epochs_per_task=params['epochs_per_task'])
+                                                           eval_interval='task',
+                                                           epochs_per_task=params['epochs_per_task'])
     
     model_checkpoint_callback = cl.callbacks.ModelCheckpoint()
     experiment_manager_callback = cl.callbacks.ExperimentManager()
