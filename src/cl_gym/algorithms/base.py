@@ -46,7 +46,6 @@ class ContinualAlgorithm:
         self.episodic_memory_loader, _ = self.benchmark.load_memory_joint(self.current_task,
                                                                           batch_size=self.params['batch_size_memory'],
                                                                           shuffle=True,
-                                                                          num_workers=self.params['num_dataloader_workers'],
                                                                           pin_memory=True)
         self.episodic_memory_iter = iter(self.episodic_memory_loader)
     
