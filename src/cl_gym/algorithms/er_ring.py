@@ -22,7 +22,7 @@ class ERRingBuffer(ContinualAlgorithm):
                 print("DEBUG >> task_ids >>", task_id)
                 print("DEBUG >> concat ids >>", mem_task_ids)
             cat_inp = torch.cat([inp, mem_inp], dim=0)
-            cat_task_ids = torch.cat([task_id, mem_task_ids])
+            cat_task_ids = torch.cat([task_id, mem_task_ids], dim=0)
             assert len(cat_inp) == len(cat_task_ids)
             # print(targ.shape, mem_targ.shape)
             cat_targ = torch.cat([targ, mem_targ.reshape(len(mem_targ))], dim=0)
