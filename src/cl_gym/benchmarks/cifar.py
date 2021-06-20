@@ -47,7 +47,7 @@ class SplitCIFAR(Benchmark):
             num_examples = self.per_task_memory_examples
             indices_train = self.sample_uniform_class_indices(self.trains[task], start_cls, end_cls, num_examples)
             indices_test = self.sample_uniform_class_indices(self.tests[task], start_cls, end_cls, num_examples)
-            assert len(indices_train) == len(indices_test) == self.per_task_memory_examples
+            assert len(indices_train) == self.per_task_memory_examples
             self.memory_indices_train[task] = indices_train[:]
             self.memory_indices_test[task] = indices_test[:]
 
