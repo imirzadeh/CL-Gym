@@ -29,20 +29,6 @@ class ContinualAlgorithm:
         pass
     
     def update_episodic_memory(self):
-        # inps, targs, task_ids = [], [], []
-        # for task in range(1, self.current_task+1):
-        #     train_loader, _ = self.benchmark.load_memory(self.current_task,
-        #                                                  shuffle=True,
-        #                                                  batch_size=self.params['batch_size_memory'])
-        #     for inp, targ, _ in train_loader:
-        #         batch_size = len(targ)
-        #         for i in range(batch_size):
-        #             inps.append(inp[i])
-        #             targs.append([targ[i]])
-        #             task_ids.append(task)
-        # mem_dataset = TensorDataset(torch.stack(inps), torch.tensor(targs), torch.tensor(task_ids))
-        # self.episodic_memory_loader = DataLoader(mem_dataset, shuffle=True, pin_memory=True,
-        #                                          batch_size=self.params['batch_size_memory'])
         self.episodic_memory_loader, _ = self.benchmark.load_memory_joint(self.current_task,
                                                                           batch_size=self.params['batch_size_memory'],
                                                                           shuffle=True,
