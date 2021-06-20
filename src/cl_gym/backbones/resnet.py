@@ -72,10 +72,6 @@ class ResNet(ContinualBackbone):
         
         if self.multi_head:
             out = self.select_output_head(out, head_ids)
-            
-        for i in range(min(len(head_ids), 2)):
-            print("DEBUG Net >> head = {}".format(head_ids[i]))
-            print(" out>> ", out[i][:25])
         return out
 
 
