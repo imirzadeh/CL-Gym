@@ -152,6 +152,7 @@ cifar_params = {
     'batch_size_validation': 256,
     'per_task_memory_examples': 10,
     'per_task_joint_examples': 2000,
+    'num_dataloader_workers': os.cpu_count() // 4,
     
     # algorithm
     'optimizer': 'SGD',  # tune.choice(['SGD', 'Adam']),
