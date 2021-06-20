@@ -54,7 +54,6 @@ class ContinualAlgorithm:
         
         device = self.params['device']
         inp, targ, task_id = batch
-        print("DEBUG >> ", task_id)
         return inp.to(device), targ.to(device), task_id.to(device)
 
     def training_task_end(self):
