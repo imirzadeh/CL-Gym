@@ -14,7 +14,7 @@ class ERRingBuffer(ContinualAlgorithm):
 
     def training_step(self, task_id, inp, targ, optimizer, criterion):
         optimizer.zero_grad()
-        if task_id > 1:
+        if task_id[0] > 1:
             mem_inp, mem_targ, mem_task_ids = self.sample_batch_from_memory()
             cat_inp = torch.cat([inp, mem_inp], dim=0)
             # print(targ.shape, mem_targ.shape)
