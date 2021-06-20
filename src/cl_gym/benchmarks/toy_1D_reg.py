@@ -47,6 +47,11 @@ class Toy1DRegDataset(Dataset):
 
 
 class Toy1DRegression(Benchmark):
+    """
+    Toy benchmark: 1D Regression problem with 3 tasks
+    Task `t` will be a polynomial with degree `t1
+    Please see: https://openreview.net/pdf?id=SJgwNerKvB
+    """
     def __init__(self,
                  num_tasks: int = 3,
                  per_task_examples: Optional[int] = None,

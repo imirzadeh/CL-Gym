@@ -8,6 +8,9 @@ from cl_gym.benchmarks.base import Benchmark, DynamicTransformDataset, SplitData
 
 
 class ContinualMNIST(Benchmark):
+    """
+    Base class for (Permuted/Rotated/Split)-MNIST benchmarks.
+    """
     def __init__(self,
                  num_tasks: int,
                  per_task_examples: Optional[int] = None,
@@ -16,6 +19,21 @@ class ContinualMNIST(Benchmark):
                  per_task_subset_examples: Optional[int] = 0,
                  task_input_transforms: Optional[list] = None,
                  task_target_transforms: Optional[list] = None):
+        """
+        Args:
+            num_tasks: The number of tasks for the benchmark.
+            per_task_examples: If set, each task will include part of the original benchmark rather than full data.
+            per_task_joint_examples: If set, the benchmark will support joint/multitask loading of tasks.
+            per_task_memory_examples: If set, the benchmark will support episodic memory/replay buffer loading of tasks.
+            per_task_subset_examples: If set, the benchmark will support loading a pre-defined subset of each task.
+            task_input_transforms: If set, the benchmark will use the provided torchvision transform.
+            task_target_transforms: If set, the benchmark will use the provided target transform for targets.
+            
+        . note::
+            If :attr:`task_input_transforms` or :attr:`task_target_transforms`, they should be a list
+            of size `num_tasks` where each element of the list can be a torchvision (Composed) transform.
+        """
+        
         super().__init__(num_tasks, per_task_examples, per_task_joint_examples, per_task_memory_examples,
                          per_task_subset_examples, task_input_transforms, task_target_transforms)
 
@@ -44,6 +62,9 @@ class ContinualMNIST(Benchmark):
             
 
 class RotatedMNIST(ContinualMNIST):
+    """
+    Rotated MNIST benchmark.
+    """
     def __init__(self,
                  num_tasks: int,
                  per_task_examples: Optional[int] = None,
@@ -53,6 +74,21 @@ class RotatedMNIST(ContinualMNIST):
                  task_input_transforms: Optional[list] = None,
                  task_target_transforms: Optional[list] = None,
                  per_task_rotation: Optional[float] = None):
+        """
+        Args:
+            num_tasks: The number of tasks for the benchmark.
+            per_task_examples: If set, each task will include part of the original benchmark rather than full data.
+            per_task_joint_examples: If set, the benchmark will support joint/multitask loading of tasks.
+            per_task_memory_examples: If set, the benchmark will support episodic memory/replay buffer loading of tasks.
+            per_task_subset_examples: If set, the benchmark will support loading a pre-defined subset of each task.
+            task_input_transforms: If set, the benchmark will use the provided torchvision transform.
+            task_target_transforms: If set, the benchmark will use the provided target transform for targets.
+            per_task_rotation: rotation degrees per task.
+        
+        . note::
+            The first task won't have any rotations.
+            e.g., if rotation per task is 45 degrees, first task has 0 deg rotation, second task has 45 degree, etc.
+        """
         
         if task_input_transforms is None:
             task_input_transforms = get_default_rotation_mnist_transform(num_tasks, per_task_rotation)
@@ -61,6 +97,9 @@ class RotatedMNIST(ContinualMNIST):
 
 
 class PermutedMNIST(ContinualMNIST):
+    """
+    Permuted MNIST benchmark
+    """
     def __init__(self,
                  num_tasks: int,
                  per_task_examples: Optional[int] = None,
@@ -69,6 +108,19 @@ class PermutedMNIST(ContinualMNIST):
                  per_task_subset_examples: Optional[int] = 0,
                  task_input_transforms: Optional[list] = None,
                  task_target_transforms: Optional[list] = None):
+        """
+        Args:
+            num_tasks: The number of tasks for the benchmark.
+            per_task_examples: If set, each task will include part of the original benchmark rather than full data.
+            per_task_joint_examples: If set, the benchmark will support joint/multitask loading of tasks.
+            per_task_memory_examples: If set, the benchmark will support episodic memory/replay buffer loading of tasks.
+            per_task_subset_examples: If set, the benchmark will support loading a pre-defined subset of each task.
+            task_input_transforms: If set, the benchmark will use the provided torchvision transform.
+            task_target_transforms: If set, the benchmark will use the provided target transform for targets.
+        
+        . note::
+            The first task will be the default MNIST and the permutation applies to tasks 2, 3, ..., `num_tasks`.
+        """
         if task_input_transforms is None:
             task_input_transforms = get_default_permuted_mnist_transform(num_tasks)
         super().__init__(num_tasks, per_task_examples, per_task_joint_examples, per_task_memory_examples,
@@ -76,6 +128,10 @@ class PermutedMNIST(ContinualMNIST):
 
 
 class SplitMNIST(ContinualMNIST):
+    """
+    Split MNIST benchmark.
+    The benchmark can have at most 5 tasks, each a binary classification on MNIST digits.
+    """
     def __init__(self,
                  num_tasks: int,
                  per_task_examples: Optional[int] = None,

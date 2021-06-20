@@ -95,6 +95,7 @@ def get_default_mnist_transform(num_tasks: int):
     ])
     return [transforms]*num_tasks
 
+
 def get_default_fashion_mnist_transform(num_tasks: int):
     transforms = torchvision.transforms.Compose([
         torchvision.transforms.ToTensor(),

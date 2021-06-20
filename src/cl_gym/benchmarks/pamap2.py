@@ -118,6 +118,10 @@ class PAMAP2Dataset(Dataset):
 
 
 class PAMAP2(Benchmark):
+    """
+    PAMAP2 benchmark: activity recognition with at most 8 tasks.
+    This is a time-series benchmark.
+    """
     def __init__(self,
                  num_tasks: int = 8,
                  per_task_examples: Optional[int] = None,
@@ -134,7 +138,6 @@ class PAMAP2(Benchmark):
         subject_order = list(range(1, 9))
         if self.shuffle_subjects:
             np.random.shuffle(subject_order)
-        print(f"Loading PAMAP2. Subject order {subject_order}")
             
         for task in range(1, self.num_tasks+1):
             trains, tests = PAMAP2Loader(subject_order[task-1]).create_train_test()

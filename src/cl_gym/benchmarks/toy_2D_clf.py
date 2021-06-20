@@ -29,10 +29,6 @@ class Toy2DCLFDataset(Dataset):
                             2: ((SMALL_COORD, -SMALL_COORD), (LARGE_COORD, -LARGE_COORD)),
                             3: ((-SMALL_COORD, -SMALL_COORD), (-LARGE_COORD, -LARGE_COORD)),
                             4: ((-SMALL_COORD, SMALL_COORD), (-LARGE_COORD, LARGE_COORD))}
-            # task_centers = {1: ((0.5, 0.5), (2.0, 2.0)),
-            #                 3: ((0.5, -0.5), (2.0, -2.0)),
-            #                 2: ((-0.5, -0.5), (-2.0, -2.0)),
-            #                 4: ((-0.5, 0.5), (-2.0, 2.0))}
         else:
             raise ValueError("2D Toy Classification dataset can have either 2 or 4 tasks")
         return task_centers
@@ -51,6 +47,10 @@ class Toy2DCLFDataset(Dataset):
 
 
 class Toy2DClassification(Benchmark):
+    """
+    Toy benchmark: each task will be a binary classification with linearly separable classes in 2D space.
+    Essentially, each task is a Gaussian cluster at some coordinates.
+    """
     def __init__(self,
                  num_tasks: int,
                  per_task_examples: Optional[int] = None,

@@ -2,14 +2,15 @@ import torch
 import torchvision
 import numpy as np
 from numpy.random import randint
-from typing import Tuple, Optional, Dict
+from typing import Tuple, Optional, Dict, List
 from torch.utils.data import DataLoader, Dataset, Subset, ConcatDataset
 from PIL import Image
 
 
 class Benchmark:
     """
-    Base class for continual learning benchmark that includes loading/serving continual learning datasets.
+    Base class for continual learning benchmarks.
+    It implements logic for loading/serving continual learning datasets.
     """
     def __init__(self,
                  num_tasks: int,
@@ -20,12 +21,18 @@ class Benchmark:
                  task_input_transforms: Optional[list] = None,
                  task_target_transforms: Optional[list] = None):
         """
-        
-        :param num_tasks: Number of tasks in benchmark.
-        :param per_task_examples: Optional, To load only part of examples per task and not all examples.
-        :param per_task_joint_examples: Optional, for joint (multitask) training.
-        :param per_task_memory_examples: Optional, for creating episodic memory/replay buffer.
-        :param per_task_subset_examples: Optional, for accessing to subset of task data, in addition to all examples.
+        Args:
+            num_tasks: The number of tasks for the benchmark.
+            per_task_examples: If set, each task will include part of the original benchmark rather than full data.
+            per_task_joint_examples: If set, the benchmark will support joint/multitask loading of tasks.
+            per_task_memory_examples: If set, the benchmark will support episodic memory/replay buffer loading of tasks.
+            per_task_subset_examples: If set, the benchmark will support loading a pre-defined subset of each task.
+            task_input_transforms: If set, the benchmark will use the provided torchvision transform.
+            task_target_transforms: If set, the benchmark will use the provided target transform for targets.
+            
+        . note::
+            If :attr:`task_input_transforms` or :attr:`task_target_transforms`, they should be a list
+            of size `num_tasks` where each element of the list can be a torchvision (Composed) transform.
         """
         
         # Task details
@@ -48,6 +55,10 @@ class Benchmark:
         self.sanity_check_inputs()
     
     def sanity_check_inputs(self):
+        """
+        A method for sanity checking arguments.
+        E.g., checking if all provided arguments are valid.
+        """
         self.sanity_check_transforms()
     
     def sanity_check_transforms(self):
@@ -56,6 +67,10 @@ class Benchmark:
                              or should be a list of size `num_tasks` that provides transforms for each task")
             
     def prepare_datasets(self):
+        """
+        Prepares datasets: will be called after `load_datasets`.
+        Responsible for computing index for various methods. E.g., selecting subset/memory indices for each task.
+        """
         if self.per_task_joint_examples:
             self.precompute_joint_indices()
         if self.per_task_memory_examples:
@@ -66,14 +81,27 @@ class Benchmark:
             self.precompute_subset_indices()
    
     def load_datasets(self):
+        """
+        Loading datasets from file.
+        """
         raise NotImplementedError
     
     def precompute_joint_indices(self):
+        """
+        For each task, (randomly) computes the indices of the subset of data points in the task's dataset.
+        Then, once `load_joint()` method is called, uses these indices to return a PyTorch `Subset` dataset.
+        .. note:: This method will be called only if the benchmark is initiated with `per_task_joint_examples.
+        """
         for task in range(1, self.num_tasks+1):
             self.joint_indices_train[task] = randint(0, len(self.trains[task]), size=self.per_task_joint_examples)
             self.joint_indices_test[task] = randint(0, len(self.tests[task]), size=self.per_task_joint_examples)
             
     def precompute_memory_indices(self):
+        """
+        For each task, (randomly) computes the indices of the subset of data points in the task's dataset.
+        Then, once `load_memory()` method is called, uses these indices to return a PyTorch `Subset` dataset.
+        .. note:: This method will be called only if the benchmark is initiated with `per_task_memory_examples`.
+        """
         raise NotImplementedError
     
     def precompute_subset_indices(self):
@@ -105,7 +133,22 @@ class Benchmark:
                 result[randint(0, num_classes)] += 1
         return result
    
-    def sample_uniform_class_indices(self, dataset, start_class, end_class, num_samples):
+    def sample_uniform_class_indices(self, dataset, start_class, end_class, num_samples) -> List:
+        """
+        Selects a subset of size `num_samples` from `start_class` to `end_class`.
+        Args:
+            dataset: The input dataset that the samples will be drawn from.
+            start_class: The start_class (inclusive)
+            end_class: The end_classes (inclusive)
+            num_samples: Number of samples.
+
+        Returns:
+            Indices of the selected samples.
+    
+        .. note:: This method is specially useful for split datasets. E.g., selecting classes 0 to 4 for Split-CIFAR-100.
+        
+        .. warning:: If `num_samples > len(dataset)`, then the output`s shape will be equal to `len(dataset)`.
+        """
         target_classes = dataset.targets.clone().detach().numpy()
         num_examples_per_class = self._calculate_num_examples_per_class(start_class, end_class, num_samples)
         class_indices = []
@@ -128,6 +171,26 @@ class Benchmark:
              num_workers: Optional[int] = 0,
              pin_memory: Optional[bool] = True) -> Tuple[DataLoader, DataLoader]:
         
+        """
+        Makes train/val dataloaders for a specific task.
+        Args:
+            task: The task number.
+            batch_size: The batch_size for dataloaders.
+            shuffle: Should loaders be shuffled? Default: True.
+            num_workers: corresponds to Pytorch's `num_workers` argument. Default: 0
+            pin_memory: corresponds to Pytorch's `pin_memory` argument. Default: True.
+
+        Returns:
+            a Tuple of dataloaders, i.e., (train_loader, validation_loader).
+            
+        Examples::
+            >>> benchmark = Benchmark(num_tasks=2)
+            >>> # task 1 loaders
+            >>> train_loader_1, val_loader_1 = benchmark.load(1, batch_size=32)
+            >>> # task 2 loaders
+            >>> train_loader_2, val_loader_2 = benchmark.load(2, batch_size=64)
+        """
+        
         if task > self.num_tasks:
             raise ValueError(f"Asked to load task {task} but the benchmark has {self.num_tasks} tasks")
         
@@ -149,7 +212,36 @@ class Benchmark:
                    shuffle: Optional[bool] = True,
                    num_workers: Optional[int] = 0,
                    pin_memory: Optional[bool] = True) -> Tuple[DataLoader, DataLoader]:
-    
+        """
+        Makes dataloaders for joint/multitask settings.
+        i.e., for task `t` returns datasets for tasks `1, 2, ..., t-1, t`.
+        
+        Args:
+            task: The task number.
+            batch_size: The batch_size for dataloaders.
+            shuffle: Should loaders be shuffled? Default: True.
+            num_workers: corresponds to Pytorch's `num_workers` argument. Default: 0
+            pin_memory: corresponds to Pytorch's `pin_memory` argument. Default: True.
+
+        Returns:
+            a Tuple of dataloaders, i.e., (train_loader, validation_loader).
+            
+        Examples::
+            >>> benchmark = Benchmark(num_tasks=2, per_task_joint_examples=128)
+            >>> # task 1 loaders (single): returns 4 batches (i.e., 128 examples)
+            >>> train_loader_1, val_loader_1 = benchmark.load(1, batch_size=32)
+            >>> # task 1 loaders (joint): returns 4 batches (i.e., 128 examples)
+            >>> joint_train_loader_1, joint_val_loader_1 = benchmark.load_joint(1, batch_size=32)
+            >>> # task 1 loaders (single): returns 4 batches (i.e., 128 examples)
+            >>> train_loader_2, val_loader_2 = benchmark.load(2, batch_size=32)
+            >>> # task 1 loaders (single): returns 8 batches (i.e., 256 examples)
+            >>> joint_train_loader_2, joint_val_loader_2 = benchmark.load(2, batch_size=32)
+        
+        .. warning::
+            The method will throw an error if `Benchmark` is instantiated without `per_task_joint_examples`.
+            The reason is that, behind the scenese, we compute the indices for joint examples in
+            `precompute_joint_indices()` method and this method relies on that computations.
+        """
         if not self.per_task_joint_examples:
             raise ValueError("Called load_joint() but per_task_joint_examples is not set")
         
@@ -188,6 +280,35 @@ class Benchmark:
                     shuffle: Optional[bool] = True,
                     num_workers: Optional[int] = 0,
                     pin_memory: Optional[bool] = True) -> Tuple[DataLoader, DataLoader]:
+        """
+        Makes dataloaders for episodic memory/replay buffer.
+        
+        Args:
+            task: The task number.
+            batch_size: The batch_size for dataloaders.
+            shuffle: Should loaders be shuffled? Default: True.
+            num_workers: corresponds to Pytorch's `num_workers` argument. Default: 0
+            pin_memory: corresponds to Pytorch's `pin_memory` argument. Default: True.
+
+        Returns:
+            a Tuple of dataloaders, i.e., (train_loader, validation_loader).
+
+        Examples::
+            >>> benchmark = Benchmark(num_tasks=2, per_task_memory_examples=16)
+            >>> # task 1 memory loaders: returns 2 batches (i.e., 16 examples)
+            >>> mem_train_loader_1, mem_val_loader_1 = benchmark.load_memory(1, batch_size=8)
+            >>> # task 2 memory loaders: returns 4 batches (i.e., 16 examples)
+            >>> mem_train_loader_2, mem_val_loader_2 = benchmark.load_memory(2, batch_size=4)
+
+        .. note::
+            This method uses `class_uniform` sampling.  i.e., if each task has 10 classes,
+            and `per_task_memory_examples=20`, then the returend samples have 2 examples per class.
+            
+        .. warning::
+            The method will throw an error if `Benchmark` is instantiated without :attr:`per_task_memory_examples`.
+            The reason is that, behind the scenese, we compute the indices for memory examples in
+            `precompute_memory_indices()` method and this method relies on that computations.
+        """
         if not self.per_task_memory_examples:
             raise ValueError("Called load_memory() but per_task_memory_examples is not set")
         
@@ -228,6 +349,10 @@ class Benchmark:
 
 
 class DynamicTransformDataset(Dataset):
+    """
+    A lightweight wrapper around PyTorch dataset.
+    Simply, applies custom transforms on the dataset, rather than loading datasets again.
+    """
     def __init__(self, task_id: int, dataset: Dataset, input_transform=None, target_transform=None):
         self.task_id = task_id
         self.dataset = dataset
@@ -251,6 +376,9 @@ class DynamicTransformDataset(Dataset):
 
 
 class SplitDataset(Dataset):
+    """
+    A lightweight wrapper around PyTorch dataset for split benchmarks.
+    """
     def __init__(self, task_id, classes_per_split, dataset):
         self.inputs = []
         self.targets = []
@@ -261,9 +389,10 @@ class SplitDataset(Dataset):
     def __build_split(self, dataset, task_id):
         start_class = (task_id-1) * self.classes_per_split
         end_class = task_id * self.classes_per_split
-        # For CIFAR
+        # For CIFAR-like datasets in torchvision where targets are list
         if isinstance(dataset.targets, list):
             target_classes = np.asarray(dataset.targets)
+        # for MNIST-like datasets where targets are tensors
         else:
             target_classes = dataset.targets.clone().detach().numpy()
         # target_classes = dataset.targets.clone().detach().numpy()
