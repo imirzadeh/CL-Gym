@@ -46,7 +46,7 @@ class ContinualTrainer(TrainerStateManagerMixin,
             self.on_after_training_epoch()
         self.algorithm.training_task_end()
     
-    def validate_algorithm_on_task(self, task: int, validate_on_train: bool = True) -> Dict[str, float]:
+    def validate_algorithm_on_task(self, task: int, validate_on_train: bool = False) -> Dict[str, float]:
         self.algorithm.backbone.eval()
         device = self.params['device']
         self.algorithm.backbone = self.algorithm.backbone.to(device)
