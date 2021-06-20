@@ -16,6 +16,7 @@ class ERRingBuffer(ContinualAlgorithm):
         optimizer.zero_grad()
         if task_id[0] > 1:
             mem_inp, mem_targ, mem_task_ids = self.sample_batch_from_memory()
+            print("DEBUG>>", mem_task_ids)
             cat_inp = torch.cat([inp, mem_inp], dim=0)
             cat_task_ids = torch.cat([task_id, mem_task_ids])
             assert len(cat_inp) == len(cat_task_ids)

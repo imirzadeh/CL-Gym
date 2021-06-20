@@ -61,6 +61,7 @@ class ContinualTrainer(TrainerStateManagerMixin,
         with torch.no_grad():
             for (inp, targ, task_ids) in eval_loader:
                 inp, targ, task_ids = inp.to(device), targ.to(device), task_ids.to(device)
+                print("DEBUG val >>", task_ids)
                 pred = self.algorithm.backbone(inp, task_ids)
                 total += len(targ)
                 test_loss += criterion(pred, targ).item()
