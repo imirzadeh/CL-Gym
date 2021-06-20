@@ -59,7 +59,7 @@ class ResNet(ContinualBackbone):
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
 
-    def forward(self, x, head_ids=None):
+    def forward(self, x, head_ids):
         bsz = x.size(0)
         out = relu(self.bn1(self.conv1(x.view(bsz, 3, 32, 32))))
         out = self.layer1(out)

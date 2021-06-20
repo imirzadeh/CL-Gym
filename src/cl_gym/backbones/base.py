@@ -28,8 +28,8 @@ class ContinualBackbone(nn.Module):
         for i, head in enumerate(head_ids):
             offset1 = int((head - 1) * self.num_classes_per_head)
             offset2 = int(head * self.num_classes_per_head)
-            output[i, :offset1].data.fill_(-2e10)
-            output[i, offset2:].data.fill_(-2e10)
+            output[i, :offset1].data.fill_(-10e10)
+            output[i, offset2:].data.fill_(-10e10)
         return output
     
     def forward(self, inp: torch.Tensor, head_ids: Optional[Iterable] = None) -> torch.Tensor:
