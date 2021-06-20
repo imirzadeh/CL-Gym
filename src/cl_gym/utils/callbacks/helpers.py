@@ -30,7 +30,7 @@ class IntervalCalculator:
         return start, end
     
     def get_tick_times(self):
-        if self.interval == 'tasks':
+        if self.interval == 'task':
             return range(1, self.num_tasks+1)
         elif self.interval == 'epoch':
             return list(range(1, (self.num_tasks+1)*self.epochs_per_task, self.epochs_per_task))[:-1] \
