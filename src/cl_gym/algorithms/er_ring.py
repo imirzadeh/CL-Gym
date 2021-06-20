@@ -18,6 +18,7 @@ class ERRingBuffer(ContinualAlgorithm):
             mem_inp, mem_targ, mem_task_ids = self.sample_batch_from_memory()
             cat_inp = torch.cat([inp, mem_inp], dim=0)
             cat_task_ids = torch.cat([task_id, mem_task_ids])
+            assert len(cat_inp) == len(cat_task_ids)
             # print(targ.shape, mem_targ.shape)
             cat_targ = torch.cat([targ, mem_targ.reshape(len(mem_targ))], dim=0)
             pred = self.backbone(cat_inp, cat_task_ids)
