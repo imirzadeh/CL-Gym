@@ -93,9 +93,9 @@ class ContinualAlgorithm:
     def prepare_criterion(self, task_id):
         return self.params['criterion']
 
-    def training_step(self, task_id, inp, targ, optimizer, criterion):
+    def training_step(self, task_ids, inp, targ, optimizer, criterion):
         optimizer.zero_grad()
-        pred = self.backbone(inp, task_id)
+        pred = self.backbone(inp, task_ids)
         loss = criterion(pred, targ)
         loss.backward()
         optimizer.step()

@@ -86,3 +86,11 @@ class MLP2Layers(ContinualBackbone):
     def forward(self, inp: torch.Tensor, head_id: Optional[int] = None) -> torch.Tensor:
         inp = inp.view(inp.shape[0], -1)
         return super(MLP2Layers, self).forward(inp, head_id)
+
+
+# if __name__ == "__main__":
+#     import numpy as np
+#     net = MLP2Layers(True, 2, 2, 10, 10, 8)
+#     inp = torch.randn((3, 2))
+#     tasks = torch.from_numpy(np.array([1, 2, 1]))
+#     net(inp, tasks)

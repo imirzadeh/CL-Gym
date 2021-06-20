@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.functional import relu, avg_pool2d
+from cl_gym.backbones import ContinualBackbone
 
 BN_MOMENTUM = 0.05
 BN_AFFINE = True
@@ -37,9 +38,9 @@ class BasicBlock(nn.Module):
         return out
 
 
-class ResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes, nf, config={}):
-        super(ResNet, self).__init__()
+class ResNet(ContinualBackbone):
+    def __init__(self, multi_head, num_classes_per_head, block, num_blocks, num_classes, nf, config={}):
+        super(ResNet, self).__init__(multi_head, num_classes_per_head)
         self.in_planes = nf
 
         self.conv1 = conv3x3(3, nf * 1)
@@ -58,7 +59,7 @@ class ResNet(nn.Module):
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
 
-    def forward(self, x, task_id):
+    def forward(self, x, head_ids=None):
         bsz = x.size(0)
         out = relu(self.bn1(self.conv1(x.view(bsz, 3, 32, 32))))
         out = self.layer1(out)
@@ -68,16 +69,12 @@ class ResNet(nn.Module):
         out = avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
         out = self.linear(out)
-        t = task_id
-        offset1 = int((t-1) * 5)
-        offset2 = int(t * 5)
-        if offset1 > 0:
-            out[:, :offset1].data.fill_(-10e10)
-        if offset2 < 100:
-            out[:, offset2:100].data.fill_(-10e10)
+        
+        if self.multi_head:
+            out = self.select_output_head(out, head_ids)
         return out
 
 
 class ResNet18Small(ResNet):
-    def __init__(self, num_classes):
-        super().__init__(BasicBlock, [2, 2, 2, 2], num_classes, 20)
+    def __init__(self, multi_head=True, num_classes_per_head=5, num_classes=100):
+        super().__init__(multi_head, num_classes_per_head, BasicBlock, [2, 2, 2, 2], num_classes, 20)

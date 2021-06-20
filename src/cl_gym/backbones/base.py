@@ -23,19 +23,19 @@ class ContinualBackbone(nn.Module):
     def get_block_grads(self, block_id: int) -> torch.Tensor:
         raise NotImplementedError
      
-    def select_output_head(self, output, head_id: int):
-        offset1 = int((head_id - 1) * self.num_classes_per_head)
-        offset2 = int(head_id * self.num_classes_per_head)
-        output[:, :offset1].data.fill_(-2e10)
-        output[:, offset2:].data.fill_(-2e10)
+    def select_output_head(self, output, head_ids: Iterable):
+        # TODO: improve performance by vectorizing this operation
+        for i, head in enumerate(head_ids):
+            offset1 = int((head - 1) * self.num_classes_per_head)
+            offset2 = int(head * self.num_classes_per_head)
+            output[i, :offset1].data.fill_(-2e10)
+            output[i, offset2:].data.fill_(-2e10)
         return output
     
-    def forward(self, inp: torch.Tensor, head_id: Optional[int] = None) -> torch.Tensor:
+    def forward(self, inp: torch.Tensor, head_ids: Optional[Iterable] = None) -> torch.Tensor:
         out = inp
         for block in self.blocks:
             out = block(out)
-        if self.multi_head and head_id:
-            out = self.select_output_head(out, head_id)
+        if self.multi_head:
+            out = self.select_output_head(out, head_ids)
         return out
-        
-# if __name__ == "__main__":

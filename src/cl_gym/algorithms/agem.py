@@ -37,15 +37,15 @@ class AGEM(ContinualAlgorithm):
         """
         return grad_batch - (torch.dot(grad_batch, grad_ref) / torch.dot(grad_ref, grad_ref)) * grad_ref
     
-    def training_step(self, task_id, inp, targ, optimizer, criterion):
+    def training_step(self, task_ids, inp, targ, optimizer, criterion):
         optimizer.zero_grad()
-        pred = self.backbone(inp, task_id)
+        pred = self.backbone(inp, task_ids)
         loss = criterion(pred, targ)
         loss.backward()
-        if task_id > 1:
+        if task_ids[0] > 1:
             grad_batch = flatten_grads(self.backbone).detach().clone()
             inp_ref, targ_ref, task_ids_ref = self.sample_batch_from_memory()
-            loss = criterion(self.backbone(inp_ref, task_id), targ_ref.reshape(len(targ_ref)))
+            loss = criterion(self.backbone(inp_ref, task_ids_ref), targ_ref.reshape(len(targ_ref)))
             loss.backward()
             grad_ref = flatten_grads(self.backbone).detach().clone()
             if self.__is_violating_direction_constraint(grad_ref, grad_batch):

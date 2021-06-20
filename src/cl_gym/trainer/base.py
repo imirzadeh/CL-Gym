@@ -36,10 +36,10 @@ class ContinualTrainer(TrainerStateManagerMixin,
             self.tick('epoch')
             self.algorithm.backbone.train()
             self.algorithm.backbone = self.algorithm.backbone.to(device)
-            for batch_idx, (inp, targ, task_id) in enumerate(train_loader):
+            for batch_idx, (inp, targ, task_ids) in enumerate(train_loader):
                 self.on_before_training_step()
                 self.tick('step')
-                self.algorithm.training_step(task, inp.to(device), targ.to(device), optimizer, criterion)
+                self.algorithm.training_step(task_ids.to(device), inp.to(device), targ.to(device), optimizer, criterion)
                 self.algorithm.training_step_end()
                 self.on_after_training_step()
             self.algorithm.training_epoch_end()
@@ -59,9 +59,9 @@ class ContinualTrainer(TrainerStateManagerMixin,
             eval_loader = self.algorithm.prepare_validation_loader(task)
         criterion = self.algorithm.prepare_criterion(task)
         with torch.no_grad():
-            for (inp, targ, task_id) in eval_loader:
-                inp, targ, task_id = inp.to(device), targ.to(device), task_id.to(device)
-                pred = self.algorithm.backbone(inp, task)
+            for (inp, targ, task_ids) in eval_loader:
+                inp, targ, task_ids = inp.to(device), targ.to(device), task_ids.to(device)
+                pred = self.algorithm.backbone(inp, task_ids)
                 total += len(targ)
                 test_loss += criterion(pred, targ).item()
                 pred = pred.data.max(1, keepdim=True)[1]
