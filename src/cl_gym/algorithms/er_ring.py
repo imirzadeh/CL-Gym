@@ -18,11 +18,11 @@ class ERRingBuffer(ContinualAlgorithm):
         if task_id[0] > 1:
             n += 1
             mem_inp, mem_targ, mem_task_ids = self.sample_batch_from_memory()
-            if n < 5:
-                print("DEBUG >> task_ids >>", task_id)
-                print("DEBUG >> concat ids >>", mem_task_ids)
             cat_inp = torch.cat([inp, mem_inp], dim=0)
             cat_task_ids = torch.cat([task_id, mem_task_ids], dim=0)
+            if n < 5:
+                print("DEBUG >> task_ids >>", task_id)
+                print("DEBUG >> concat ids >>", cat_task_ids)
             assert len(cat_inp) == len(cat_task_ids)
             # print(targ.shape, mem_targ.shape)
             cat_targ = torch.cat([targ, mem_targ.reshape(len(mem_targ))], dim=0)
