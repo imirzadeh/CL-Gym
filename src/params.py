@@ -148,7 +148,7 @@ rot_mnist_params = {
 cifar_params = {
     'num_tasks': 20,
     'batch_size_train': 64,  # tune.grid_search([8, 16]),
-    'batch_size_memory': 16,
+    'batch_size_memory': 64,
     'batch_size_validation': 256,
     'per_task_memory_examples': 2000,
     'per_task_joint_examples': 2000,
