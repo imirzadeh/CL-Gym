@@ -382,7 +382,8 @@ instance/
 
 # Sphinx documentation
 docs/_build/
-doc/_build/
+_build
+generated
 
 # PyBuilder
 target/
@@ -508,8 +509,6 @@ src/data/
 src/cl_gym/data/*
 src/cl_gym/data/
 cl_gym/data/
-src/docs
-src/docs/
 src/outputs
 src/outputs/
 src/test
