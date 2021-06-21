@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from typing import Optional, Dict, Literal
+from typing import Optional, Dict, Literal, Iterable
 from cl_gym.backbones import ContinualBackbone
 
 activations = {
@@ -15,12 +15,21 @@ class FCBlock(nn.Module):
     Fully-Connected block with activations
     (i.e., linear layer, followed by ReLU and [optionally] a dropout layer)
     """
-    
     def __init__(self, inp_dim: int, out_dim: int,
                  dropout_prob: float = 0.0,
                  include_activation: bool = True,
                  bias: bool = True,
                  activation: Literal['relu', 'tanh', 'sigmoid'] = 'relu'):
+        """
+        
+        Args:
+            inp_dim: Input dimension.
+            out_dim: Output dimension.
+            dropout_prob: Dropout probability. Default: 0.0 (No dropout)
+            include_activation: Should a linear layer followed by an activation layer?
+            bias: Should a linear layer have bias?
+            activation: Activation function. Currently supports `relu`, `tanh`, `sigmoid`.
+        """
         
         super(FCBlock, self).__init__()
         layers = [nn.Linear(inp_dim, out_dim, bias=bias)]
@@ -38,10 +47,27 @@ class FCBlock(nn.Module):
 
 
 class MLP2Layers(ContinualBackbone):
+    """
+    MLP model (feed-forward) with two hidden layers.
+    """
     def __init__(self, multi_head=False, num_classes_per_head=None,
                  input_dim=784, hidden_dim_1=256, hidden_dim_2=256,
                  output_dim=10, dropout_prob=0.0, activation='ReLU',
                  bias=True, include_final_layer_act=False):
+        """
+        
+        Args:
+            multi_head: Is this a multi-head model?
+            num_classes_per_head: If backbone is multi-head, then what is the head size?
+            input_dim:
+            hidden_dim_1:
+            hidden_dim_2:
+            output_dim:
+            dropout_prob: Dropout probability. Default: No dropout.
+            activation: The name of activation function. Default: 'ReLU'.
+            bias: Should linear layers have bias?
+            include_final_layer_act: Should the last layer have activation function? Default: False.
+        """
         # model variables
         super(MLP2Layers, self).__init__(multi_head, num_classes_per_head)
         self.input_dim = input_dim
@@ -56,6 +82,13 @@ class MLP2Layers(ContinualBackbone):
     
     @torch.no_grad()
     def get_block_params(self, block_id: int) -> Dict[str, torch.Tensor]:
+        """
+        Args:
+            block_id: the block number. In this case, layer.
+
+        Returns:
+            params: a dictionary of form {'weight': weight_params, 'bias': bias_params}
+        """
         assert 1 <= block_id <= 3
         block = self.blocks[block_id-1].layers[0]
         weight = block.weight.data if block.weight is not None else None
@@ -83,14 +116,16 @@ class MLP2Layers(ContinualBackbone):
             bias_grad = block.bias.grad.data
         return {'weight': weight_grad, 'bias': bias_grad}
 
-    def forward(self, inp: torch.Tensor, head_id: Optional[int] = None) -> torch.Tensor:
+    def forward(self, inp: torch.Tensor, head_ids: Optional[Iterable] = None) -> torch.Tensor:
+        """
+        Args:
+            inp: The input of shape [BatchSize x input_dim]
+            head_ids: Optional iterable (e.g., List or 1-D Tensor) object of shape [BatchSize] includes head_ids.
+
+        Returns:
+            output: The forward-pass output. Shape: [BatchSize x output_dim]
+        
+        Note: the `head_id` will only be used if the backbone is initiated with `multi_head = True`.
+        """
         inp = inp.view(inp.shape[0], -1)
-        return super(MLP2Layers, self).forward(inp, head_id)
-
-
-# if __name__ == "__main__":
-#     import numpy as np
-#     net = MLP2Layers(True, 2, 2, 10, 10, 8)
-#     inp = torch.randn((3, 2))
-#     tasks = torch.from_numpy(np.array([1, 2, 1]))
-#     net(inp, tasks)
+        return super(MLP2Layers, self).forward(inp, head_ids)

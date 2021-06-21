@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.nn.functional import relu, avg_pool2d
 from cl_gym.backbones import ContinualBackbone
+from typing import Optional, Iterable
 
 BN_MOMENTUM = 0.05
 BN_AFFINE = True
@@ -25,8 +25,7 @@ class BasicBlock(nn.Module):
         self.shortcut = nn.Sequential()
         if stride != 1 or in_planes != self.expansion * planes:
             self.shortcut = nn.Sequential(
-                nn.Conv2d(in_planes, self.expansion * planes, kernel_size=1,
-                          stride=stride, bias=False),
+                nn.Conv2d(in_planes, self.expansion * planes, kernel_size=1, stride=stride, bias=False),
                 nn.BatchNorm2d(self.expansion * planes, affine=False, track_running_stats=False, momentum=BN_MOMENTUM)
             )
 
@@ -39,7 +38,9 @@ class BasicBlock(nn.Module):
 
 
 class ResNet(ContinualBackbone):
-    def __init__(self, multi_head, num_classes_per_head, block, num_blocks, num_classes, nf, config={}):
+    def __init__(self, multi_head: bool, num_classes_per_head: int,
+                 block, num_blocks, num_classes, nf, config: dict = {}):
+        
         super(ResNet, self).__init__(multi_head, num_classes_per_head)
         self.in_planes = nf
 
@@ -59,9 +60,9 @@ class ResNet(ContinualBackbone):
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
 
-    def forward(self, x, head_ids):
-        bsz = x.size(0)
-        out = relu(self.bn1(self.conv1(x.view(bsz, 3, 32, 32))))
+    def forward(self, inp: torch.Tensor, head_ids: Optional[Iterable] = None):
+        bsz = inp.size(0)
+        out = relu(self.bn1(self.conv1(inp.view(bsz, 3, 32, 32))))
         out = self.layer1(out)
         out = self.layer2(out)
         out = self.layer3(out)
@@ -76,5 +77,19 @@ class ResNet(ContinualBackbone):
 
 
 class ResNet18Small(ResNet):
+    """
+    ResNet-18 with 1/3 less feature maps, a common backbone in CL literature.
+    See Appendix C in https://openreview.net/pdf?id=Fmg_fQYUejf for further details.
+    """
     def __init__(self, multi_head=True, num_classes_per_head=5, num_classes=100):
+        """
+        Args:
+            multi_head: Is this a multi-head backbone? Default: True
+            num_classes_per_head: Number of classes for each head. Default: 5 (for SplitCIFAR100)
+            num_classes: total number of classes for benchmark. Default: 100 (for SplitCIFAR100)
+            
+        . Note::
+            Since this benchmark is mostly used for Split-CIFAR100, the default arguments
+            are chosen to be suitable for this benchmark.
+        """
         super().__init__(multi_head, num_classes_per_head, BasicBlock, [2, 2, 2, 2], num_classes, 20)

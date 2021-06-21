@@ -4,6 +4,9 @@ import torch.nn.functional as F
 
 
 class CNN1D(nn.Module):
+    """
+    A small 1-D CNN used for time series tasks.
+    """
     def __init__(self, dropout_prob=0.0):
         super().__init__()
         self.dropout_prob = dropout_prob
@@ -31,10 +34,3 @@ class CNN1D(nn.Module):
         out = self.relu(out)
         out = self.fc4(out)
         return out
-
-    
-# if __name__ == "__main__":
-#     inp = torch.randn((32, 128, 18))
-#     net = CNN1D()
-#     print(sum(p.numel() for p in net.parameters()))
-#     net(inp)
