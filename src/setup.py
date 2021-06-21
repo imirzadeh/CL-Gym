@@ -1,6 +1,6 @@
 import os
-from setuptools import setup
 from typing import List
+from setuptools import setup, find_packages
 
 _PATH_ROOT = os.path.dirname(__file__)
 
@@ -24,8 +24,9 @@ def _load_requirements(path_dir: str, file_name: str = 'requirements.txt', comme
 
 setup(
   name='cl-gym',
-  packages=['cl_gym'],
-  version='1.0.0',
+  # packages=['cl_gym'],
+  packages=find_packages(exclude=('tests', 'tests*')),
+  version='1.0.1',
   license='MIT',
   description='Continual Learning Gym',
   author='Iman Mirzadeh',

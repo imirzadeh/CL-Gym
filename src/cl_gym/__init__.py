@@ -1,9 +1,13 @@
-import cl_gym.benchmarks
-import cl_gym.algorithms
-import cl_gym.trainer
-import cl_gym.backbones
-import cl_gym.utils.callbacks as callbacks
+from cl_gym import benchmarks as benchmarks
+from cl_gym import trainer as trainer
+from cl_gym import algorithms as algorithms
+from cl_gym import backbones as backbones
+from cl_gym.utils import callbacks as callbacks
 
-__version__ = "0.0.1"
+__version__ = "1.0.0"
 
-__all__ = ['cl_gym']
+__all__ = ['benchmarks',
+           'trainer',
+           'algorithms',
+           'backbones',
+           'callbacks']
