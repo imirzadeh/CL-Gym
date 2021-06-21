@@ -8,6 +8,10 @@ from cl_gym.utils.metrics import ContinualMetric, PerformanceMetric, ForgettingM
 
 
 class MetricCollector(ContinualCallback):
+    """
+    Collects metrics during the learning.
+    This callback can support various metrics such as average accuracy/error, and average forgetting.
+    """
     def __init__(self, num_tasks: int,
                  epochs_per_task: Optional[int] = 1,
                  collect_on_init: bool = False,
@@ -15,7 +19,17 @@ class MetricCollector(ContinualCallback):
                  eval_interval: Literal['task', 'epoch'] = 'epoch',
                  eval_type: Literal['classification', 'regression'] = 'classification',
                  tuner_callback: Optional[Callable[[float, bool], None]] = None):
+        """
         
+        Args:
+            num_tasks: The number of task for the learning experience.
+            epochs_per_task: The number of epochs per task.
+            collect_on_init: Should also collect metrics before training starts?
+            collect_metrics_for_future_tasks: Should collect metrics for future tasks? (e.g.,, for forward-transfer)
+            eval_interval: The intervals at which the algorithm will be evaluated. Can be either `task` or `epoch`
+            eval_type: Is this a classification task or regression task?
+            tuner_callback: Optional tuner callback than can be called with eval metrics for parameter optimization.
+        """
         self.num_tasks = num_tasks
         self.epochs_per_task = epochs_per_task
         self.collect_on_init = collect_on_init

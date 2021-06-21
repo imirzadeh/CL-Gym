@@ -2,6 +2,9 @@ from cl_gym.utils.callbacks import ContinualCallback
 
 
 class ExperimentManager(ContinualCallback):
+    """
+    Experiment manager callback: logs parameters before training starts, updates server when training ends.
+    """
     def __init__(self):
         super(ExperimentManager, self).__init__('ExperimentManager')
     

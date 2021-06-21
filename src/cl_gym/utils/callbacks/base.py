@@ -4,6 +4,15 @@ from typing import List, Optional
 
 
 class ContinualCallback:
+    """
+    Base class for continual callback.
+    Simply, a callback can listen to one or several events that the Trainer emits during the learning experience:
+    
+    .. image:: https://user-images.githubusercontent.com/8312051/122718892-4f888480-d222-11eb-87be-301e462de551.png
+        :width: 400
+    Please see the introduction video on what the Trainer's timeline looks like.
+    
+    """
     def __init__(self, name: str = '', save_dirs: Optional[List[str]] = None):
         self.name = name
         self.params = {}

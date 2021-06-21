@@ -5,7 +5,17 @@ from cl_gym.utils.callbacks import ContinualCallback
 
 
 class ModelCheckpoint(ContinualCallback):
+    """
+    Model Checkpoint callback.
+    Saves the backbone (model) to disk at the end of every epoch or task (depending on the input settings).
+    """
     def __init__(self, interval='task', name_prefix=None):
+        """
+        
+        Args:
+            interval: The intervals at which the checkpointing will be done. can be either 'task' or 'epoch'
+            name_prefix: Optional prefix for model names.
+        """
         if interval.lower() not in ['task', 'epoch']:
             raise ValueError("Checkpoint callback supports can only save after each 'task' or each 'epoch'")
         self.interval = interval
