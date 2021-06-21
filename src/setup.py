@@ -26,7 +26,7 @@ setup(
   name='cl-gym',
   # packages=['cl_gym'],
   packages=find_packages(exclude=('tests', 'tests*')),
-  version='1.0.2',
+  version='1.0.3',
   include_package_data=True,
   license='MIT',
   description='Continual Learning Gym',
@@ -41,7 +41,6 @@ setup(
     'Topic :: Scientific/Engineering :: Artificial Intelligence',
     'License :: OSI Approved :: MIT License',   # Again, pick a license
     'Programming Language :: Python :: 3',      #Specify which pyhton versions that you want to support
-    'Programming Language :: Python :: 3.6',
     'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
