@@ -7,14 +7,15 @@ import seaborn as sns
 from pathlib import Path
 import matplotlib.pylab as pl
 from matplotlib import pyplot as plt
-from typing import Literal, List, Tuple, Union, Iterable, Optional
+from typing import List, Tuple, Union, Iterable, Optional
 from cl_gym.utils.loggers import Logger
 
 
 class IntervalCalculator:
     def __init__(self, num_tasks: int,
                  epochs_per_task: int,
-                 interval: Literal['epoch', 'task']):
+                 interval: str):
+        # interval can be either 'epoch' or 'task'
         self.num_tasks = num_tasks
         self.epochs_per_task = epochs_per_task
         self.interval = interval
@@ -96,7 +97,8 @@ class Visualizer:
         sns.set_context("notebook", rc=rc)
     
     @staticmethod
-    def _prepare_plot_context(plot_type: Literal['line', 'heatmap'], rc_dict=None):
+    def _prepare_plot_context(plot_type: str, rc_dict=None):
+        # plot_type supports 'line' and 'heatmap'
         Visualizer.set_context()
         if rc_dict:
             plt.rcParams.update(rc_dict)

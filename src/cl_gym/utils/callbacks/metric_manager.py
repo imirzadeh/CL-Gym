@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from typing import Optional, Literal, Callable, Dict
+from typing import Optional, Callable, Dict
 from cl_gym.utils.loggers import Logger
 from cl_gym.utils.callbacks import ContinualCallback
 from cl_gym.utils.callbacks.helpers import IntervalCalculator, Visualizer
@@ -16,8 +16,8 @@ class MetricCollector(ContinualCallback):
                  epochs_per_task: Optional[int] = 1,
                  collect_on_init: bool = False,
                  collect_metrics_for_future_tasks: bool = False,
-                 eval_interval: Literal['task', 'epoch'] = 'epoch',
-                 eval_type: Literal['classification', 'regression'] = 'classification',
+                 eval_interval: str = 'epoch',
+                 eval_type: str = 'classification',
                  tuner_callback: Optional[Callable[[float, bool], None]] = None):
         """
         
@@ -27,7 +27,7 @@ class MetricCollector(ContinualCallback):
             collect_on_init: Should also collect metrics before training starts?
             collect_metrics_for_future_tasks: Should collect metrics for future tasks? (e.g.,, for forward-transfer)
             eval_interval: The intervals at which the algorithm will be evaluated. Can be either `task` or `epoch`
-            eval_type: Is this a classification task or regression task?
+            eval_type: Is this a `classification` task or `regression` task?
             tuner_callback: Optional tuner callback than can be called with eval metrics for parameter optimization.
         """
         self.num_tasks = num_tasks

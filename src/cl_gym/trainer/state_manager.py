@@ -1,5 +1,4 @@
 from abc import ABC
-from typing_extensions import Literal
 
 
 class TrainerStateManagerMixin(ABC):
@@ -20,7 +19,8 @@ class TrainerStateManagerMixin(ABC):
     def _tick_task(self):
         self.current_task += 1
     
-    def tick(self, interval: Literal['step', 'epoch', 'task']):
+    def tick(self, interval: str):
+        # interval type: Literal['step', 'epoch', 'task']
         if interval == 'step':
             self._tick_step()
         elif interval == 'epoch':

@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from typing import Optional, Dict, Literal, Iterable
+from typing import Optional, Dict, Iterable
 from cl_gym.backbones import ContinualBackbone
 
 activations = {
@@ -19,7 +19,7 @@ class FCBlock(nn.Module):
                  dropout_prob: float = 0.0,
                  include_activation: bool = True,
                  bias: bool = True,
-                 activation: Literal['relu', 'tanh', 'sigmoid'] = 'relu'):
+                 activation: str = 'relu'):
         """
         
         Args:
