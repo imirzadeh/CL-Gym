@@ -75,10 +75,10 @@ class MLP2Layers(ContinualBackbone):
         self.hidden_dim_2 = hidden_dim_2
         self.output_dim = output_dim
         self.dropout_prob = dropout_prob
-        self.block_1 = FCBlock(self.input_dim, self.hidden_dim_1, self.dropout_prob, True, bias, activation)
-        self.block_2 = FCBlock(self.hidden_dim_1, self.hidden_dim_2, self.dropout_prob, True, bias, activation)
-        self.block_3 = FCBlock(self.hidden_dim_2, self.output_dim, 0.0, include_final_layer_act, bias, activation)
-        self.blocks: nn.ModuleList = nn.ModuleList([self.block_1, self.block_2, self.block_3])
+        block_1 = FCBlock(self.input_dim, self.hidden_dim_1, self.dropout_prob, True, bias, activation)
+        block_2 = FCBlock(self.hidden_dim_1, self.hidden_dim_2, self.dropout_prob, True, bias, activation)
+        block_3 = FCBlock(self.hidden_dim_2, self.output_dim, 0.0, include_final_layer_act, bias, activation)
+        self.blocks: nn.ModuleList = nn.ModuleList([block_1, block_2, block_3])
     
     @torch.no_grad()
     def get_block_params(self, block_id: int) -> Dict[str, torch.Tensor]:
