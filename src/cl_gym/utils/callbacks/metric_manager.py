@@ -109,7 +109,7 @@ class MetricCollector(ContinualCallback):
     def save_metrics(self):
         metrics = ['accuracy', 'loss'] if self.eval_type == 'classification' else ['loss']
         for metric in metrics:
-            filepath = os.path.join(self.save_paths['metrics'], metric)
+            filepath = os.path.join(self.save_paths['metrics'], metric + ".npy")
             with open(filepath, 'wb') as f:
                 np.save(f, self.meters[metric].data)
     
