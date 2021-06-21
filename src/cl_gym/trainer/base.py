@@ -9,6 +9,10 @@ from cl_gym.trainer.callback_hooks import TrainerCallbackHookMixin
 
 class ContinualTrainer(TrainerStateManagerMixin,
                        TrainerCallbackHookMixin):
+    """
+    Base class for Trainer component. Basically, orchestrates the training by implementing a state-machine.
+    For further info, please see the guides on how the trainer works.
+    """
     def __init__(self,
                  algorithm: ContinualAlgorithm,
                  params: dict,

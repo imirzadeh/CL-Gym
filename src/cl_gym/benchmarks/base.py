@@ -90,7 +90,7 @@ class Benchmark:
         """
         For each task, (randomly) computes the indices of the subset of data points in the task's dataset.
         Then, once `load_joint()` method is called, uses these indices to return a PyTorch `Subset` dataset.
-        .. note:: This method will be called only if the benchmark is initiated with `per_task_joint_examples.
+        .. note:: This method will be called only if the benchmark is initiated with `per_task_joint_examples`.
         """
         for task in range(1, self.num_tasks+1):
             self.joint_indices_train[task] = randint(0, len(self.trains[task]), size=self.per_task_joint_examples)
