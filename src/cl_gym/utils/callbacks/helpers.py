@@ -91,7 +91,7 @@ class Visualizer:
               'legend.fontsize': 16,
               'legend.handlelength': 1,
               'legend.handleheight': 1,
-              'text.usetex': True}
+              'text.usetex': False}
         
         sns.set_context("notebook", rc=rc)
     
