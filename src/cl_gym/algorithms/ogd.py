@@ -8,10 +8,10 @@ from cl_gym.algorithms.utils import flatten_grads, assign_grads
 
 class OGD(ContinualAlgorithm):
     """
-    Orthogonal Gradient Descent:
-    paper: https://arxiv.org/pdf/1910.07104.pdf
-    implementation is partially based on: https://github.com/MehdiAbbanaBennani/continual-learning-ogdplus/
+    | Orthogonal Gradient Descent
+    | By Farajtabar et al. : https://arxiv.org/abs/1910.07104.pdf
     """
+    # implementation is partially based on: https://github.com/MehdiAbbanaBennani/continual-learning-ogdplus/
     def __init__(self, backbone, benchmark, params):
         super(OGD, self).__init__(backbone, benchmark, params)
         self.gradient_storage = []

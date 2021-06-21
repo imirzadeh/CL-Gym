@@ -7,6 +7,10 @@ from cl_gym.algorithms import ContinualAlgorithm
 
 
 class ERRingBuffer(ContinualAlgorithm):
+    """
+    | Experience Replay Ring Buffer
+    | By Chaudhry et al. : https://arxiv.org/abs/1902.10486.pdf
+    """
     def __init__(self, backbone, benchmark, params):
         super(ERRingBuffer, self).__init__(backbone, benchmark, params, requires_memory=True)
         self.episodic_memory_iter = None

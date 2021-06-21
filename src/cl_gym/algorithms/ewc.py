@@ -8,10 +8,19 @@ from cl_gym.algorithms import ContinualAlgorithm
 
 class EWC(ContinualAlgorithm):
     """
-    EWC Model
+    | Elastic Weight Consolidation
+    | By Kirkpatricka et al. : https://arxiv.org/abs/1612.00796.pdf
     """
-    # credits implementation: https://github.com/kuc2477/pytorch-ewc
+    # implementation is partially based on: https://github.com/kuc2477/pytorch-ewc
     def __init__(self, backbone, benchmark, params, fisher_lambda: float = 50.0, fisher_sample_size: int = 128):
+        """
+        Args:
+            backbone: the backbone model
+            benchmark: the benchmark
+            params: params for training
+            fisher_lambda: The lambda coefficient of EWC algorithm
+            fisher_sample_size: Sample size for calculating Fisher diagonal
+        """
         super(EWC, self).__init__(backbone, benchmark, params)
         self.fisher_lambda = fisher_lambda
         self.fisher_sample_size = fisher_sample_size

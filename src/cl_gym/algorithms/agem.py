@@ -8,10 +8,10 @@ from cl_gym.algorithms.utils import flatten_grads, assign_grads
 
 class AGEM(ContinualAlgorithm):
     """
-    A-GEM Model:
-    paper: https://arxiv.org/pdf/1812.00420.pdf
-    implementation credits: https://github.com/MehdiAbbanaBennani/continual-learning-ogdplus
+    | Averaged Gradient Episodic Memory
+    | By Chaudhry et al.: https://arxiv.org/abs/1812.00420.pdf
     """
+    # Implementation is partially based on: https://github.com/MehdiAbbanaBennani/continual-learning-ogdplus
     def __init__(self, backbone, benchmark, params):
         super(AGEM, self).__init__(backbone, benchmark, params, requires_memory=True)
     

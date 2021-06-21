@@ -4,8 +4,9 @@ import torch
 
 class ContinualAlgorithm:
     """
-    Base class for continual learning algorithms.
-    It contains abstractions for implementing different algorithms, and also implementations shared among all algorithms.
+    | Base class for continual learning algorithms.
+    | It contains abstractions for implementing different algorithms, and also implementations shared among all algorithms.
+    | It can be used for Naive(Finetune) algorithm or Stable SGD algorithm by Mirzadeh et. al.
     """
     def __init__(self, backbone, benchmark, params, requires_memory=False):
         """

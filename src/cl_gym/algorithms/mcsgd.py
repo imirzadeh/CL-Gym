@@ -9,6 +9,10 @@ from cl_gym.algorithms.utils import flatten_weights, assign_weights
 
 
 class MCSGD(ContinualAlgorithm):
+    """
+    | Mode Connectivity SGD
+    | By Mirzadeh et al. :https://openreview.net/forum?id=Fmg_fQYUejf
+    """
     def __init__(self, backbone, benchmark, params):
         super(MCSGD, self).__init__(backbone, benchmark, params, requires_memory=True)
         self.w_bar_prev = None

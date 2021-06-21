@@ -6,7 +6,7 @@ from cl_gym.algorithms import ContinualAlgorithm
 
 class Multitask(ContinualAlgorithm):
     """
-    Multitask-Joint Training
+    Multitask (Joint) Training
     """
     def __init__(self, backbone, benchmark, params):
         super(Multitask, self).__init__(backbone, benchmark, params, requires_memory=True)
