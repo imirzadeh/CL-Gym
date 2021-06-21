@@ -8,6 +8,7 @@ astroid==2.5.1
 async-timeout==3.0.1
 attrs==20.3.0
 Babel==2.9.0
+beautifulsoup4==4.9.3
 blessings==1.7
 cachetools==4.2.1
 certifi==2020.12.5
@@ -66,6 +67,7 @@ py-spy==0.3.5
 pyaml==20.4.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
+pydata-sphinx-theme==0.6.3
 Pygments==2.8.1
 pyparsing==2.4.7
 pyperclip==1.8.2
@@ -86,8 +88,11 @@ seaborn==0.11.1
 six==1.15.0
 snakeviz==2.1.0
 snowballstemmer==2.1.0
+soupsieve==2.2.1
 Sphinx==3.5.2
 sphinx-autoapi==1.7.0
+sphinx-book-theme==0.1.0
+sphinx-rtd-theme==0.5.2
 sphinxcontrib-applehelp==1.0.2
 sphinxcontrib-devhelp==1.0.2
 sphinxcontrib-htmlhelp==1.0.3
