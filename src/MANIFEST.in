@@ -1,0 +1,26 @@
+recursive-exclude __pycache__  *.py[cod] *.orig
+
+# Include the README and CHANGELOG
+include *.md
+
+# Include the license file
+include LICENSE
+
+recursive-include cl_gym *.py
+
+# exclude tests from package
+recursive-exclude tests *
+
+# Exclude the documentation files
+recursive-exclude docs *
+exclude docs
+
+recursive-include requirements *.txt
+include requirements.txt
+
+# Exclude submodules
+exclude .gitmodules
+
+prune .git
+prune .github
+
