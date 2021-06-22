@@ -20,11 +20,12 @@ def make_params():
 
             # algorithm
             'mcsgd_alpha': 0.2,
+            'dropout': 0.2,
             'optimizer': 'SGD',
-            'learning_rate': 0.1,
-            'learning_rate_lower_bound': 0.0005,
+            'learning_rate': 0.15,
+            'learning_rate_lower_bound': 0.0002,
             'momentum': 0.8,
-            'learning_rate_decay': 0.4,
+            'learning_rate_decay': 0.35,
             'criterion': torch.nn.CrossEntropyLoss(),
             'device': torch.device('cuda' if torch.cuda.is_available() else 'cpu'), }
 
