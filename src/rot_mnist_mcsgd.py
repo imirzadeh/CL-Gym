@@ -19,9 +19,10 @@ def make_params():
             'num_dataloader_workers': os.cpu_count()//2,
 
             # algorithm
-            'mcsgd_alpha': 0.3,
+            'mcsgd_alpha': 0.2,
             'optimizer': 'SGD',
             'learning_rate': 0.1,
+            'learning_rate_lower_bound': 0.0005,
             'momentum': 0.8,
             'learning_rate_decay': 0.4,
             'criterion': torch.nn.CrossEntropyLoss(),
