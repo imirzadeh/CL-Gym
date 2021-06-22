@@ -47,7 +47,7 @@ def train(params):
                                            per_task_rotation=9.0)
 
     # backbone: MLP with 2 hidden layers
-    backbone = cl.backbones.MLP2Layers(hidden_dim_1=256, hidden_dim_2=256)
+    backbone = cl.backbones.MLP2Layers(hidden_dim_1=256, hidden_dim_2=256, dropout_prob=params['dropout'])
 
     # Algorithm: A-GEM
     algorithm = cl.algorithms.MCSGD(backbone, benchmark, params)
