@@ -41,9 +41,11 @@ class MCSGD(ContinualAlgorithm):
     def calculate_point_loss(self, net, loader):
         # criterion = nn.CrossEntropyLoss()
         criterion = self.prepare_criterion(-1)
+        device = self.params['device']
         net.eval()
         total_loss, total_count = 0.0, 0.0
         for (inp, targ, task_ids) in loader:
+            inp, targ, task_ids = inp.to(device), targ.to(device), task_ids.to(device)
             pred = net(inp, task_ids)
             total_count += len(targ)
             total_loss += criterion(pred, targ)
