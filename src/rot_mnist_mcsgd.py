@@ -12,13 +12,14 @@ def make_params():
             'num_tasks': 5,
             'epochs_per_task': 1,
             'per_task_memory_examples': 10,
-            'per_task_subset_examples': 2000,
+            'per_task_subset_examples': 2500,
             'batch_size_train': 32,
             'batch_size_memory': 32,
             'batch_size_validation': 256,
             'num_dataloader_workers': os.cpu_count()//2,
 
             # algorithm
+            'mcsgd_alpha': 0.3,
             'optimizer': 'SGD',
             'learning_rate': 0.1,
             'momentum': 0.8,
