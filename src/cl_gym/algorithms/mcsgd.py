@@ -17,8 +17,8 @@ class MCSGD(ContinualAlgorithm):
         super(MCSGD, self).__init__(backbone, benchmark, params, requires_memory=True)
         self.w_bar_prev = None
         self.w_hat_curr = None
-        self.num_samples_on_line = self.params.get('mcsgd_line_samples', 5)
-        self.alpha = self.params.get('mcsgd_alpha', 0.5)
+        self.num_samples_on_line = self.params.get('mcsgd_line_samples', 10)
+        self.alpha = self.params.get('mcsgd_alpha', 0.25)
     
     def calculate_line_loss(self, w_start, w_end, loader):
         line_samples = np.arange(0.0, 1.01, 1.0 / float(self.num_samples_on_line))
@@ -52,18 +52,26 @@ class MCSGD(ContinualAlgorithm):
         total_loss /= total_count
         return total_loss
     
+    def _prepare_mode_connectivity_optimizer(self):
+        return torch.optim.SGD(self.backbone.parameters(),
+                               lr=self.params['mcsgd_line_optim_lr'],
+                               momentum=self.params['momentum'])
+
     def find_connected_minima(self, task):
         # print(f"Debug >> w_bar_prev? {self.w_bar_prev is not None}, w_hat_curr? {self.w_hat_curr is not None}")
         mc_model = assign_weights(self.backbone, self.w_bar_prev + (self.w_hat_curr - self.w_bar_prev) * self.alpha)
-        optimizer = self.prepare_optimizer(task)
-        loader_prev, _ = self.benchmark.load_memory_joint(task-1, batch_size=32)
-        loader_curr, _ = self.benchmark.load_subset(task, batch_size=32)
+        optimizer = self._prepare_mode_connectivity_optimizer()
+        loader_prev, _ = self.benchmark.load_memory_joint(task-1, batch_size=self.params['batch_size_memory'],
+                                                          num_workers=self.params.get('num_dataloader_workers', 0))
+        loader_curr, _ = self.benchmark.load_subset(task, batch_size=self.params['batch_size_train'],
+                                                    num_workers=self.params.get('num_dataloader_workers', 0))
         mc_model.train()
         optimizer.zero_grad()
         grads_prev = self.calculate_line_loss(self.w_bar_prev, flatten_weights(mc_model, True), loader_prev)
         grads_curr = self.calculate_line_loss(self.w_hat_curr, flatten_weights(mc_model, True), loader_curr)
         optimizer.zero_grad()
-        mc_model = assign_grads(mc_model, (grads_prev + grads_curr)/2.0)
+        # mc_model = assign_grads(mc_model, (grads_prev + grads_curr)/2.0)
+        mc_model = assign_grads(mc_model, (grads_prev + grads_curr))
         optimizer.step()
         return mc_model
     
