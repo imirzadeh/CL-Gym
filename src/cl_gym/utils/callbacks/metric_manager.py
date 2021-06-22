@@ -106,8 +106,8 @@ class MetricCollector(ContinualCallback):
         relative_step = self.interval_calculator.get_step_within_task(trainer.current_epoch)
         for eval_task in range(start_task, end_task + 1):
             task_metrics = trainer.validate_algorithm_on_task(eval_task)
-            self.log_metrics(trainer, trainer.current_task, eval_task, task_metrics, global_step, relative_step)
             print(f"[{global_step}] Eval metrics for task {eval_task} >> {task_metrics}")
+            self.log_metrics(trainer, trainer.current_task, eval_task, task_metrics, global_step, relative_step)
 
     def save_metrics(self):
         metrics = ['accuracy', 'loss'] if self.eval_type == 'classification' else ['loss']
