@@ -36,7 +36,7 @@ class FCBlock(nn.Module):
         if include_activation:
             layers.append(activations[activation.lower()])
         if dropout_prob > 0.0:
-            self.layers.append(nn.Dropout(dropout_prob))
+            layers.append(nn.Dropout(dropout_prob))
         self.layers = nn.ModuleList(layers)
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
