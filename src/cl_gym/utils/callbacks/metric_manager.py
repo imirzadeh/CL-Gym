@@ -68,21 +68,21 @@ class MetricCollector(ContinualCallback):
             self.meters['loss'].update(task_learned, task_evaluated, metrics['loss'], relative_step)
     
     def _update_logger(self, trainer, task_evaluated: int, metrics: dict, global_step: int):
-        
         if self.eval_type == 'classification':
             if trainer.logger:
                 trainer.logger.log_metric(f'acc_{task_evaluated}', round(metrics['accuracy'], 2), global_step)
                 trainer.logger.log_metric(f'loss_{task_evaluated}', round(metrics['loss'], 2), global_step)
-            if trainer.current_task > 0:
+            if 0 < trainer.current_task == task_evaluated:
                 avg_acc = round(self.meters['accuracy'].compute(trainer.current_task), 2)
-                print(f"average accuracy >> {avg_acc}")
+                print(f"Average accuracy >> {avg_acc}")
                 if trainer.logger:
                     trainer.logger.log_metric(f'average_acc', avg_acc, global_step)
         else:
             if trainer.logger:
                 trainer.logger.log_metric(f'loss_{task_evaluated}', round(metrics['loss'], 2), global_step)
-            if trainer.current_task > 0:
+            if 0 < trainer.current_task == task_evaluated:
                 avg_loss = round(self.meters['loss'].compute(trainer.current_task), 5)
+                print(f"Average Loss >> {avg_loss}")
                 if trainer.logger:
                     trainer.logger.log_metric(f'average_loss', avg_loss, global_step)
 
