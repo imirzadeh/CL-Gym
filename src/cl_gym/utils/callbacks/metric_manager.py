@@ -76,6 +76,7 @@ class MetricCollector(ContinualCallback):
             trainer.logger.log_metric(f'loss_{task_evaluated}', round(metrics['loss'], 2), global_step)
             if trainer.current_task > 0:
                 avg_acc = round(self.meters['accuracy'].compute(trainer.current_task), 2)
+                print(f"average accuracy >> {round(avg_acc, 2)}")
                 trainer.logger.log_metric(f'average_acc', avg_acc, global_step)
         else:
             trainer.logger.log_metric(f'loss_{task_evaluated}', round(metrics['loss'], 2), global_step)
@@ -141,7 +142,6 @@ class MetricCollector(ContinualCallback):
                 metrics = self.meters['accuracy'].get_raw_history(task)
                 start = self.epochs_per_task-1
                 metrics = metrics[start::self.epochs_per_task]
-                print(f"DEBUG >> task {task}, metric shape= {metrics.shape}")
         return range(start, end), metrics
         
     def plot_metrics(self, logger: Optional[Logger] = None):
