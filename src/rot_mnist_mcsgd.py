@@ -9,23 +9,23 @@ def make_params():
 
     params = {
             # benchmark
-            'num_tasks': 5,
+            'num_tasks': 20,
             'epochs_per_task': 1,
             'per_task_memory_examples': 10,
             'per_task_subset_examples': 2500,
-            'batch_size_train': 32,
-            'batch_size_memory': 32,
+            'batch_size_train': 64,
+            'batch_size_memory': 64,
             'batch_size_validation': 256,
             'num_dataloader_workers': os.cpu_count()//2,
 
             # algorithm
-            'mcsgd_alpha': 0.2,
-            'dropout': 0.2,
+            'mcsgd_alpha': 0.3,
+            'dropout': 0.1,
             'optimizer': 'SGD',
-            'learning_rate': 0.15,
+            'learning_rate': 0.1,
             'learning_rate_lower_bound': 0.0002,
             'momentum': 0.8,
-            'learning_rate_decay': 0.35,
+            'learning_rate_decay': 0.4,
             'criterion': torch.nn.CrossEntropyLoss(),
             'device': torch.device('cuda' if torch.cuda.is_available() else 'cpu'), }
 
@@ -45,7 +45,7 @@ def train(params):
                                            per_task_rotation=10.0)
 
     # backbone: MLP with 2 hidden layers
-    backbone = cl.backbones.MLP2Layers(hidden_dim_1=100, hidden_dim_2=100)
+    backbone = cl.backbones.MLP2Layers(hidden_dim_1=256, hidden_dim_2=256)
 
     # Algorithm: A-GEM
     algorithm = cl.algorithms.MCSGD(backbone, benchmark, params)
