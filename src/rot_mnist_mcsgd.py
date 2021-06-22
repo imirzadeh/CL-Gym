@@ -19,13 +19,14 @@ def make_params():
             'num_dataloader_workers': os.cpu_count()//2,
 
             # algorithm
-            'mcsgd_alpha': 0.3,
-            'dropout': 0.1,
+            'mcsgd_alpha': 0.1,
+            'mcsgd_line_samples': 10,
+            'dropout': 0.2,
             'optimizer': 'SGD',
             'learning_rate': 0.1,
             'learning_rate_lower_bound': 0.0002,
             'momentum': 0.8,
-            'learning_rate_decay': 0.4,
+            'learning_rate_decay': 0.8,
             'criterion': torch.nn.CrossEntropyLoss(),
             'device': torch.device('cuda' if torch.cuda.is_available() else 'cpu'), }
 
@@ -42,7 +43,7 @@ def train(params):
     benchmark = cl.benchmarks.RotatedMNIST(num_tasks=params['num_tasks'],
                                            per_task_memory_examples=params['per_task_memory_examples'],
                                            per_task_subset_examples=params['per_task_memory_examples'],
-                                           per_task_rotation=10.0)
+                                           per_task_rotation=9.0)
 
     # backbone: MLP with 2 hidden layers
     backbone = cl.backbones.MLP2Layers(hidden_dim_1=256, hidden_dim_2=256)
