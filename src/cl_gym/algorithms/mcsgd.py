@@ -52,15 +52,15 @@ class MCSGD(ContinualAlgorithm):
         total_loss /= total_count
         return total_loss
     
-    def _prepare_mode_connectivity_optimizer(self):
-        return torch.optim.SGD(self.backbone.parameters(),
+    def _prepare_mode_connectivity_optimizer(self, model):
+        return torch.optim.SGD(model.parameters(),
                                lr=self.params['mcsgd_line_optim_lr'],
                                momentum=self.params['momentum'])
 
     def find_connected_minima(self, task):
         # print(f"Debug >> w_bar_prev? {self.w_bar_prev is not None}, w_hat_curr? {self.w_hat_curr is not None}")
         mc_model = assign_weights(self.backbone, self.w_bar_prev + (self.w_hat_curr - self.w_bar_prev) * self.alpha)
-        optimizer = self._prepare_mode_connectivity_optimizer()
+        optimizer = self._prepare_mode_connectivity_optimizer(mc_model)
         loader_prev, _ = self.benchmark.load_memory_joint(task-1, batch_size=self.params['batch_size_memory'],
                                                           num_workers=self.params.get('num_dataloader_workers', 0))
         loader_curr, _ = self.benchmark.load_subset(task, batch_size=self.params['batch_size_train'],
