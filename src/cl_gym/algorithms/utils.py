@@ -12,7 +12,7 @@ def flatten_weights(model, numpy_output: bool = True):
     """
     all_params = []
     for param in model.parameters():
-        all_params.append(param.deatch().clone().view(-1))
+        all_params.append(param.view(-1))
     all_params = torch.cat(all_params)
     if numpy_output:
         return all_params.cpu().detach().numpy()
