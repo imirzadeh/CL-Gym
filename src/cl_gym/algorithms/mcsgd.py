@@ -23,18 +23,11 @@ class MCSGD(ContinualAlgorithm):
     def calculate_line_loss(self, w_start, w_end, loader):
         line_samples = np.arange(0.0, 1.01, 1.0 / float(self.num_samples_on_line))
         accum_grad = None
-        import time
-        t_calc_point = 0
-        t_calc_grads = 0
         for t in line_samples:
             grads = []
             w_mid = w_start + (w_end - w_start) * t
-            t0 = time.time()
             m = assign_weights(self.backbone, w_mid)
-            t1 = time.time()
             clf_loss = self.calculate_point_loss(m, loader)
-            t2 = time.time()
-            t_calc_point += (t2 - t1)
             clf_loss.backward()
             for name, param in m.named_parameters():
                 grads.append(param.grad.view(-1))
@@ -43,17 +36,15 @@ class MCSGD(ContinualAlgorithm):
                 accum_grad = grads
             else:
                 accum_grad += grads
-            t3 = time.time()
-            t_calc_grads += (t3 - t2)
         return accum_grad/self.num_samples_on_line
    
     def calculate_point_loss(self, net, loader):
         # criterion = nn.CrossEntropyLoss()
-        criterion = nn.MSELoss()
+        criterion = self.prepare_criterion(-1)
         net.eval()
         total_loss, total_count = 0.0, 0.0
-        for (inp, targ, _) in loader:
-            pred = net(inp)
+        for (inp, targ, task_ids) in loader:
+            pred = net(inp, task_ids)
             total_count += len(targ)
             total_loss += criterion(pred, targ)
         total_loss /= total_count
