@@ -36,10 +36,9 @@ class MCSGD(ContinualAlgorithm):
                 accum_grad = grads
             else:
                 accum_grad += grads
-        return accum_grad/self.num_samples_on_line
+        return accum_grad
    
     def calculate_point_loss(self, net, loader):
-        # criterion = nn.CrossEntropyLoss()
         criterion = self.prepare_criterion(-1)
         device = self.params['device']
         net.eval()
@@ -58,7 +57,6 @@ class MCSGD(ContinualAlgorithm):
                                momentum=self.params['momentum'])
 
     def find_connected_minima(self, task):
-        # print(f"Debug >> w_bar_prev? {self.w_bar_prev is not None}, w_hat_curr? {self.w_hat_curr is not None}")
         mc_model = assign_weights(self.backbone, self.w_bar_prev + (self.w_hat_curr - self.w_bar_prev) * self.alpha)
         optimizer = self._prepare_mode_connectivity_optimizer(mc_model)
         loader_prev, _ = self.benchmark.load_memory_joint(task-1, batch_size=self.params['batch_size_memory'],
@@ -69,7 +67,6 @@ class MCSGD(ContinualAlgorithm):
         optimizer.zero_grad()
         grads_prev = self.calculate_line_loss(self.w_bar_prev, flatten_weights(mc_model, True), loader_prev)
         grads_curr = self.calculate_line_loss(self.w_hat_curr, flatten_weights(mc_model, True), loader_curr)
-        optimizer.zero_grad()
         # mc_model = assign_grads(mc_model, (grads_prev + grads_curr)/2.0)
         mc_model = assign_grads(mc_model, (grads_prev + grads_curr))
         optimizer.step()
@@ -77,8 +74,6 @@ class MCSGD(ContinualAlgorithm):
     
     def training_epoch_end(self):
         self.w_hat_curr = flatten_weights(self.backbone, True)
-        # if self.current_task > 1:
-        #     self.backbone = self.find_connected_minima(self.current_task)
 
     def training_task_end(self):
         if self.current_task > 1:
