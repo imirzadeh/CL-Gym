@@ -1,4 +1,3 @@
-
 # Created by https://www.toptal.com/developers/gitignore/api/python,macos,linux,pycharm,pycharm+all,images,archives,sublimetext,vim
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,macos,linux,pycharm,pycharm+all,images,archives,sublimetext,vim
 
@@ -506,12 +505,22 @@ __MACOSX
 
 src/data
 src/data/
-src/cl_gym/data/*
-src/cl_gym/data/
+data
+/data/*
+outputs/
+
+cl_gym/data*
+cl_gym/data
 cl_gym/data/
-src/outputs
-src/outputs/
-src/test
+
+
+cl_gym/data/
+/cl_gym/data/
+cl_gym/outputs/
+cl_gym/test
+test/
+
+
 
 ### Compressed ###
 *.7z
