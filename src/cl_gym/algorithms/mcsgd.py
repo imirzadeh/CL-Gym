@@ -46,7 +46,7 @@ class MCSGD(ContinualAlgorithm):
         for (inp, targ, task_ids) in loader:
             inp, targ, task_ids = inp.to(device), targ.to(device), task_ids.to(device)
             pred = net(inp, task_ids)
-            total_count += len(targ)
+            total_count += 1 #len(targ)
             total_loss += criterion(pred, targ)
         total_loss /= total_count
         return total_loss
