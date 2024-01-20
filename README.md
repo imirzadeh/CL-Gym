@@ -1,3 +1,8 @@
+> [!WARNING]  
+> This repository has been archived. I suggest using other actively maintained libraries such as [Avalanche](https://github.com/ContinualAI/avalanche).
+
+-----------
+
 # CL-Gym: Full-Featured PyTorch Library for Continual Learning
 CL-Gym is a small yet very flexible library for continual learning research and development.  
 Currently, CL-Gym is under heavy development and ready to be used by experienced researchers and engineers. However, the stable version will be ready for public release in August.
